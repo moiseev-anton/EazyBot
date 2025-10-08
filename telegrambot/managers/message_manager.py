@@ -2,14 +2,12 @@ import logging
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from aiogram import html
 
 from jsonapi_client.document import Document
-from jsonapi_client.resourceobject import ResourceObject
-from dto import UserResponseDTO, UserWithIncludeDTO, FacultyDTO, GroupDTO
+from dto import UserDTO, FacultyDTO, GroupDTO
 
-from cache import KeyboardDataStore
 
 logger = logging.getLogger(__name__)
 
@@ -166,34 +164,39 @@ class MessageManager:
     _ERROR_DEFAULT = "⚠ Что-то пошло не так, попробуйте снова."
 
     @classmethod
-    def get_start_message(cls, user_dto: UserResponseDTO) -> str:
+    def get_start_message(
+            cls,
+            user: UserDTO,
+            is_created: bool,
+            nonce_status: Optional[str] = None
+    ) -> str:
         """Формирует стартовое сообщение для пользователя."""
 
-        auth_message = cls.AUTH_MESSAGES.get(user_dto.nonce_status, "") if user_dto.nonce_status else ""
+        auth_message = cls.AUTH_MESSAGES.get(nonce_status, "") if nonce_status else ""
 
-        if not user_dto.created and auth_message:
+        if not is_created and auth_message:
             return auth_message
 
-        name = user_dto.first_name or "Anonymous"
+        name = user.first_name
         welcome = (
             cls.WELCOME_NEW.format(name=name)
-            if user_dto.created
+            if is_created
             else cls.WELCOME_BACK.format(name=name)
         )
 
         return f"{welcome}\n\n{auth_message}" if auth_message else welcome
 
     @staticmethod
-    def get_main_message(user: UserWithIncludeDTO)  -> str:
+    def get_main_message(user: UserDTO)  -> str:
         lines = [
-            f"👤 <b>{html.bold(f"{user.first_name} {user.last_name}")}</b>",
-            f"\t\t\t # {user.username}",
+            f"👤 <b>{f"{user.first_name} {user.last_name}"}</b>",
+            f"🔹 <i>{user.username}</i>\n",
         ]
         if user.subscriptions:
             for sub in user.subscriptions:
-                lines.append(f"📌 <b>{sub.display_name}</b>")
+                lines.append(f"⭐️ <b>{sub.display_name}</b>")
         else:
-            lines.append(f"📌 <i>не выбрано</i>")
+            lines.append(f"<b>☆ не выбрано</b>")
 
         return "\n".join(lines)
 

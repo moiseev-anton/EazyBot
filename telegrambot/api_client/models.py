@@ -1,10 +1,10 @@
 models_as_jsonschema = {
-    'users': {'properties': {
-        'social_id': {'type': ['string', 'null']},
-        'platform': {'type': ['string', 'null']},
-        'first_name': {'type': ['string', 'null']},
-        'last_name': {'type': ['string', 'null']},
-        'extra_data': {
+    'social-accounts': {'properties': {
+        'socialId': {'type': 'string'},
+        'platform': {'type': 'string'},
+        'firstName': {'type': ['string', 'null']},
+        'lastName': {'type': ['string', 'null']},
+        'extraData': {
                 'type': 'object',
                 'properties': {
                     'username': {'type': ['string', 'null']},  # Учитываем, что username может быть None
@@ -12,13 +12,28 @@ models_as_jsonschema = {
                     'is_premium': {'type': ['boolean', 'null']},
                     'added_to_attachment_menu': {'type': ['boolean', 'null']},
                 },
-                'additionalProperties': True,  # Разрешаем дополнительные поля, если нужно
+                'additionalProperties': True,  # Разрешаем дополнительные поля
             },
         'nonce': {'type': ['string', 'null']},
+        'user': {'relation': 'to-one', 'resource': ['users']},
+    }},
+
+    'users': {'properties': {
+        'firstName': {'type': 'string'},
+        'lastName': {'type': ['string', 'null']},
+        'username': {'type': 'string'},
+        'subscriptions': {'relation': 'to-many', 'resource': ['group-subscriptions', 'teacher-subscriptions']},
+        'accounts': {'relation': 'to-many', 'resource': ['accounts']},
     }},
 
     "group-subscriptions": {
         "properties": {
+            'createdAt': {'type': 'string'},
+            'updatedAt': {'type': 'string'},
+            "user": {
+                "relation": "to-one",
+                "resource": ["users"],
+            },
             "group": {
                 "relation": "to-one",
                 "resource": ["groups"],
@@ -27,6 +42,12 @@ models_as_jsonschema = {
     },
     "teacher-subscriptions": {
         "properties": {
+            'createdAt': {'type': 'string'},
+            'updatedAt': {'type': 'string'},
+            "user": {
+                "relation": "to-one",
+                "resource": ["users"],
+            },
             "teacher": {
                 "relation": "to-one",
                 "resource": ["teachers"],

@@ -1,109 +1,27 @@
-from enum import Enum
-from typing import Optional, Dict, Any, List
+from typing import List, Optional, TYPE_CHECKING
 
-from pydantic import BaseModel, field_validator, PrivateAttr
+from pydantic import BaseModel, field_validator
 
 from dto.subscription_dto import SubscriptionDTO
 
-
-class UserInclude(str, Enum):
-    SUBSCRIPTIONS = "subscriptions"
-    SUBSCRIPTIONS_GROUP = "subscriptions.group"
-    SUBSCRIPTIONS_TEACHER = "subscriptions.teacher"
-    ACCOUNTS = "accounts"
+if TYPE_CHECKING:
+    from .account_dto import AccountDTO
+    from .subscription_dto import SubscriptionDTO
 
 
-class TelegramUserDTO(BaseModel):
-    telegram_id: int
-    first_name: Optional[str] = ""
-    last_name: Optional[str] = None
-    username: Optional[str] = None
-    language_code: Optional[str] = None
-    is_premium: Optional[bool] = False
-    added_to_attachment_menu: Optional[bool] = False
-
-    class Config:
-        frozen = True
-
-
-class RegisterUserDTO(BaseModel):
-    social_id: str
-    platform: str
-    first_name: str
-    last_name: Optional[str] = None
-    extra_data: Dict[str, Any] = {}
-    nonce: Optional[str] = None
-
-    @field_validator("social_id")
-    def validate_social_id(cls, value: str) -> str:
-        value = value.strip()
-        if not value:
-            raise ValueError("social_id cannot be empty")
-        return value
-
-    class Config:
-        frozen = True
-
-
-class UserResponseDTO(BaseModel):
+class UserDTO(BaseModel):
     id: str
-    social_id: str
-    platform: str
     first_name: str
     last_name: Optional[str] = None
-    username: Optional[str] = None
-    extra_data: Dict[str, Any] = {}
-    created: bool
-    nonce_status: Optional[str] = None
+    username: str
+    subscription_ids: List[int] = []
+    account_ids: List[int] = []
 
-    @field_validator("id", "social_id")
-    def validate_non_empty(cls, value: str) -> str:
-        value = value.strip()
-        if not value:
-            raise ValueError(f"{value.__name__} cannot be empty")
-        return value
+    subscriptions: Optional[List["SubscriptionDTO"]] = None
+    accounts: Optional[List["AccountDTO"]] = None
 
     class Config:
-        frozen = True
-        arbitrary_types_allowed = True
-        resource_name = "users"
-
-
-class AccountDTO(BaseModel):
-    id: int
-    platform: str
-    social_id: str
-    extra_data: Dict[str, Any] = {}
-
-    class Config:
-        frozen = True
-        _resource_name = "social-accounts"
-
-    @field_validator("id", "social_id", "platform")
-    def validate_non_empty(cls, value: str) -> str:
-        value = value.strip()
-        if not value:
-            raise ValueError(f"{value.__name__} cannot be empty")
-        return value
-
-    @classmethod
-    def from_jsonapi(cls, acc: "ResourceObject") -> "AccountDTO":
-        return cls(
-            id=int(acc.id),
-            platform=acc.title,
-            social_id=acc.short_title,
-            extra_data=acc.extra_data
-        )
-
-
-class UserWithIncludeDTO(BaseModel):
-    id: str
-    _resource_type: str = PrivateAttr(default="users")
-    first_name: str
-    last_name: Optional[str] = None
-    username: Optional[str] = None
-    subscriptions: List[SubscriptionDTO] = []
-    accounts: List[AccountDTO] = []
+        _resource_name = "users"
 
     @field_validator("id", "username")
     def validate_non_empty(cls, value: str) -> str:
@@ -111,3 +29,22 @@ class UserWithIncludeDTO(BaseModel):
         if not value:
             raise ValueError(f"{value.__name__} cannot be empty")
         return value
+
+    @classmethod
+    def from_jsonapi(
+            cls,
+            user: "ResourceObject",
+            subscriptions: Optional[List["SubscriptionDTO"]] = None,
+            accounts: Optional[List["AccountDTO"]] = None,
+    ) -> "UserDTO":
+        return cls(
+            id=str(user.id),
+            first_name=user.first_name,
+            last_name=user.last_name,
+            username=user.username,
+            subscription_ids=[sub.id for sub in user.subscriptions._resource_identifiers],
+            account_ids=[acc.id for acc in user.accounts._resource_identifiers],
+
+            subscriptions=subscriptions,
+            accounts=accounts,
+        )

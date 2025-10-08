@@ -1,11 +1,9 @@
 import logging
-from typing import Optional
 
-from dependency_injector.wiring import inject, Provide
+from dependency_injector.wiring import Provide, inject
 
-from config import settings
-from dto import TelegramUserDTO, RegisterUserDTO, UserResponseDTO, UserInclude
-from repositories import JsonApiUserRepository
+from dto import AuthDTO, AuthResponseDTO, UserDTO
+from repositories import JsonApiAccountRepository, JsonApiUserRepository
 
 logger = logging.getLogger(__name__)
 
@@ -13,32 +11,19 @@ logger = logging.getLogger(__name__)
 class UserService:
 
     @inject
-    async def register_user(
+    async def auth_user(
             self,
-            telegram_user: TelegramUserDTO,
-            nonce: Optional[str] = None,
+            auth_dto: AuthDTO,
+            account_repo: JsonApiAccountRepository = Provide["repositories.account"],
             user_repo: JsonApiUserRepository = Provide["repositories.user"]
-    ) -> UserResponseDTO:
-        register_dto = RegisterUserDTO(
-            social_id=str(telegram_user.telegram_id),
-            platform=settings.platform,
-            first_name=telegram_user.first_name,
-            last_name=telegram_user.last_name,
-            extra_data={
-                "username": telegram_user.username,
-                "language_code": telegram_user.language_code,
-                "is_premium": telegram_user.is_premium,
-                "added_to_attachment_menu": telegram_user.added_to_attachment_menu,
-            },
-            nonce=nonce,
-        )
-        return await user_repo.register(register_dto)
+    ) -> AuthResponseDTO:
+        account = await account_repo.get_or_create(auth_dto)
+        account.user = await user_repo.get_user()
+        return account
 
     @inject
     async def get_user_with_subscriptions(
             self,
             user_repo: JsonApiUserRepository = Provide["repositories.user"]
-    ):
-        return await user_repo.get_user_by_context(
-            include={UserInclude.SUBSCRIPTIONS_GROUP, UserInclude.SUBSCRIPTIONS_TEACHER}
-        )
+    ) -> UserDTO:
+        return await user_repo.get_user_with_subscriptions()

@@ -23,10 +23,8 @@ def thunder_protection(prefix: str) -> Callable[[Callable[P, R]], Callable[P, R]
             full_key = get_context_prefix() + prefix
             if parts:
                 full_key += ":" + ":".join(parts)
-            print(full_key)
 
             if full_key in tasks:
-                print("такая задача уже выполняется")
                 return await tasks[full_key]
 
             task = asyncio.create_task(func(*args, **kwargs))

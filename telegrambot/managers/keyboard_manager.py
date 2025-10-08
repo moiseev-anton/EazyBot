@@ -12,7 +12,7 @@ from cachetools.func import ttl_cache
 from cache import KeyboardDataStore
 from config import settings
 
-from dto import UserWithIncludeDTO, SubscriptionDTO, FacultyDTO, GroupDTO, TeacherDTO
+from dto import UserDTO, SubscriptionDTO, FacultyDTO, GroupDTO, TeacherDTO
 
 logger = logging.getLogger(__name__)
 
@@ -145,7 +145,7 @@ class KeyboardManager:
         self.cache_store = cache_store
 
     @classmethod
-    def get_main_keyboard(cls, user_dto: UserWithIncludeDTO) -> InlineKeyboardMarkup:
+    def get_main_keyboard(cls, user_dto: UserDTO) -> InlineKeyboardMarkup:
         if user_dto.subscriptions:
             return cls.main_with_schedule
         return cls.main_base

@@ -28,5 +28,7 @@ class TeacherDTO(BaseModel):
         return cls(
             id=int(t.id),
             full_name=t.full_name,
-            short_name=t.short_name
+            short_name=t.short_name,
+            # TODO: Добавить ссылку после добавления этого поля не сервере
+            # link=t.link,
         )

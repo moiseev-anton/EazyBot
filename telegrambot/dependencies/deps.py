@@ -16,7 +16,6 @@ class Deps(containers.DeclarativeContainer):
             "services",
             "handlers",
         ],
-        # auto_wire=True по умолчанию — wiring сработает при container = Deps()
     )
 
     config = providers.Configuration()
@@ -53,4 +52,3 @@ class Deps(containers.DeclarativeContainer):
     )
 
     services = providers.Container(Services)
-

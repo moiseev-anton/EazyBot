@@ -1,13 +1,15 @@
 from dependency_injector import containers, providers
 
 from api_client import AsyncClientSession
-from repositories import JsonApiUserRepository, JsonApiGroupRepository, JsonApiTeacherRepository
+from repositories import JsonApiAccountRepository, JsonApiUserRepository, JsonApiGroupRepository, \
+    JsonApiTeacherRepository
 
 
 class Repositories(containers.DeclarativeContainer):
     config = providers.Configuration()
     api_client = providers.Dependency(instance_of=AsyncClientSession)
 
+    account = providers.Singleton(JsonApiAccountRepository, api_client=api_client)
     user = providers.Singleton(JsonApiUserRepository, api_client=api_client)
     group = providers.Singleton(
         JsonApiGroupRepository,

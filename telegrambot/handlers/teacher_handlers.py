@@ -8,7 +8,7 @@ from dependencies import Deps
 from handlers.error_handler import handle_error
 from managers import MessageManager
 from managers.keyboard_manager import AlphabetCallback, TeacherCallback, EntityCallback, KeyboardManager
-from services import TeacherService
+from services import TeacherService, UserService
 from states import TeacherStates
 
 logger = logging.getLogger(__name__)

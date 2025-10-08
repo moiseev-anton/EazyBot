@@ -1,7 +1,11 @@
-from .user_dto import UserResponseDTO, RegisterUserDTO, TelegramUserDTO, UserInclude, UserWithIncludeDTO
-from .subscription_dto import SubscriptionDTO
-from .group_dto import GroupDTO
-from .teacher_dto import TeacherDTO
+from .account_dto import AccountDTO, AuthDTO, AuthResponseDTO
 from .faculty_dto import FacultyDTO
-from .lesson_dto import LessonDTO, DateRange
+from .group_dto import GroupDTO
+from .lesson_dto import DateRange, LessonDTO
+from .subscription_dto import SubscriptionDTO
+from .teacher_dto import TeacherDTO
+from .user_dto import UserDTO
 
+AccountDTO.model_rebuild()
+AuthResponseDTO.model_rebuild()
+UserDTO.model_rebuild()
