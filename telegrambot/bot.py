@@ -1,8 +1,12 @@
+# @formatter:off
+#  Monkey-патч для jsonapi_client
+from api_client.client_patch import patch_jsonapi_client
+patch_jsonapi_client(verbose=True)
+
+# @formatter:on
 import asyncio
 import logging
 import sys
-
-from aiogram import Dispatcher
 
 from config import settings
 from dependencies import Deps
@@ -17,10 +21,7 @@ from handlers import (
 from middleware import UserContextMiddleware
 from tasks import setup_periodic_task_scheduler
 
-import jsonapi_client
-from api_client.client_patch import camelize_attribute_name, decamelize_attribute_name
-from api_client.document import CustomDocument
-
+from aiogram import Dispatcher
 
 logging.basicConfig(level=getattr(logging, settings.log_level), stream=sys.stdout)
 logger = logging.getLogger(__name__)
@@ -29,8 +30,8 @@ logger = logging.getLogger(__name__)
 # Хуки запуска и остановки
 async def on_startup(deps: Deps):
     deps.api_client()  # Создаем API-client, который устанавливает соединение с сервером
-    await deps.services.teacher().refresh()  # Первичное обновление данных клавиатур
-    await deps.services.group().refresh()  # Первичное обновление данных клавиатур
+    await deps.services.teacher().refresh()  # Первичное получение учителей для клавиатур
+    await deps.services.group().refresh()  # Первичное получение групп для клавиатур
     await setup_periodic_task_scheduler(deps=deps)  # Запуск планировщика
     logger.info("Bot started.")
 
@@ -42,11 +43,6 @@ async def on_shutdown(deps: Deps):
 
 
 async def main():
-    # Monkey-патч для jsonapi_client
-    jsonapi_client.common.jsonify_attribute_name = camelize_attribute_name
-    jsonapi_client.common.dejsonify_attribute_name = decamelize_attribute_name
-    jsonapi_client.document.Document = CustomDocument
-
     container = Deps()
     container.config.from_pydantic(settings)
 
@@ -71,4 +67,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-

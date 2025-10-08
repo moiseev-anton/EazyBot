@@ -1,18 +1,7 @@
-from urllib.parse import urlparse, urlunparse
+from collections import defaultdict
 
 from api_client.contextual_prefixed_cache import ContextualCache
 from api_client.thunder_protection import thunder_protection
-
-import jsonapi_client
-from api_client.client_patch import camelize_attribute_name, decamelize_attribute_name
-from api_client.document import CustomDocument
-from dto import GroupDTO, TeacherDTO, LessonDTO
-from dto.faculty_dto import FacultyDTO
-
-# Monkey-патч для jsonapi_client
-jsonapi_client.common.jsonify_attribute_name = camelize_attribute_name
-jsonapi_client.common.dejsonify_attribute_name = decamelize_attribute_name
-jsonapi_client.document.Document = CustomDocument
 
 import asyncio
 import copy
@@ -23,20 +12,20 @@ import logging
 import time
 from typing import Optional, Dict, List, Tuple, Any
 
-import jsonapi_client.document
 import yarl
-from jsonapi_client import Filter, Inclusion
+from jsonapi_client import Filter, Inclusion, Session
 from jsonapi_client.common import HttpStatus, error_from_response, HttpMethod
 from jsonapi_client.document import Document
+
 from jsonapi_client.exceptions import DocumentError
 from api_client.exceptions import NotModifiedError
 from context import request_context
-
+from dto import GroupDTO, SubscriptionDTO, TeacherDTO
 
 logger = logging.getLogger(__name__)
 
 
-class AsyncClientSession(jsonapi_client.Session):
+class AsyncClientSession(Session):
     def __init__(
         self,
         server_url: str,
