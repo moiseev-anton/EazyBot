@@ -1,16 +1,16 @@
-from typing import Union
-
 from jsonapi_client.resourceobject import ResourceObject
 from pydantic import BaseModel
 
 from dto.group_dto import GroupDTO
 from dto.teacher_dto import TeacherDTO
+from dto.base_dto import SubscriptableDTO
+
 
 
 class SubscriptionDTO(BaseModel):
     id: int
     user_id: str
-    object: Union[GroupDTO, TeacherDTO]
+    object: SubscriptableDTO
 
     class Config:
         frozen = True
@@ -27,8 +27,12 @@ class SubscriptionDTO(BaseModel):
     def display_name(self) -> str:
         return self.object.display_name
 
+    @property
+    def button_name(self) -> str:
+        return self.object.button_name
+
     @classmethod
-    def from_jsonapi(cls, sub: 'ResourceObject', object: Union[GroupDTO, TeacherDTO]) -> "SubscriptionDTO":
+    def from_jsonapi(cls, sub: 'ResourceObject', object: SubscriptableDTO) -> "SubscriptionDTO":
         return cls(
             id=sub.id,
             user_id=sub.user._resource_identifier.id,

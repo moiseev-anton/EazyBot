@@ -1,11 +1,10 @@
 from typing import Optional
 
-from pydantic import BaseModel, PrivateAttr
-
+from dto.base_dto import SubscriptableDTO
 from dto.faculty_dto import FacultyDTO
 
 
-class GroupDTO(BaseModel):
+class GroupDTO(SubscriptableDTO):
     id: int
     title: str
     grade: int
@@ -21,7 +20,7 @@ class GroupDTO(BaseModel):
 
     @property
     def display_name(self):
-        return self.title
+        return self.title or 'n/a'
 
     @property
     def button_name(self):

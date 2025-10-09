@@ -1,9 +1,9 @@
 from typing import Optional
 
-from pydantic import BaseModel, PrivateAttr
+from dto.base_dto import SubscriptableDTO
 
 
-class TeacherDTO(BaseModel):
+class TeacherDTO(SubscriptableDTO):
     id: int
     full_name: str
     short_name: str
@@ -17,7 +17,7 @@ class TeacherDTO(BaseModel):
 
     @property
     def display_name(self):
-        return self.short_name
+        return self.full_name
 
     @property
     def button_name(self):
@@ -29,6 +29,5 @@ class TeacherDTO(BaseModel):
             id=int(t.id),
             full_name=t.full_name,
             short_name=t.short_name,
-            # TODO: Добавить ссылку после добавления этого поля не сервере
-            # link=t.link,
+            link=getattr(t, "link", None),
         )
