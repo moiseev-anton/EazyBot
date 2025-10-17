@@ -11,9 +11,10 @@ class TeacherDTO(SubscriptableDTO):
 
     class Config:
         frozen = True
-        resource_name = "teachers"
-        filter_key = "teacher"
+        _resource_type = "teachers"
+        _relation_name = "teacher"
         allowed_filters = set()
+        _subscription_resource_type = "teacher-subscriptions"
 
     @property
     def display_name(self):

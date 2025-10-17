@@ -14,9 +14,10 @@ class GroupDTO(SubscriptableDTO):
 
     class Config:
         frozen = True
-        resource_type = "groups"
-        filter_key = "group"
+        _resource_type = "groups"
+        _relation_name = "group"
         allowed_filters = {"subgroup"}
+        _subscription_resource_type = "group-subscriptions"
 
     @property
     def display_name(self):
