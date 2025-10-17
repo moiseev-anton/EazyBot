@@ -14,7 +14,7 @@ async def handle_error(callback: types.CallbackQuery, state: FSMContext, message
     Универсальная функция для обработки ошибок.
     Отправляет стандартное сообщение об ошибке и сбрасывает состояние.
     """
-    error_text = MessageManager.get_error_message()
+    error_text = MessageManager.ERROR_DEFAULT()
     text = message if message else error_text
 
     await callback.message.edit_text(

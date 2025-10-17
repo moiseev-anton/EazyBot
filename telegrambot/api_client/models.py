@@ -28,8 +28,8 @@ models_as_jsonschema = {
 
     "group-subscriptions": {
         "properties": {
-            'createdAt': {'type': 'string'},
-            'updatedAt': {'type': 'string'},
+            'createdAt': {'type': ['string', 'null']},
+            'updatedAt': {'type': ['string', 'null']},
             "user": {
                 "relation": "to-one",
                 "resource": ["users"],
@@ -42,8 +42,8 @@ models_as_jsonschema = {
     },
     "teacher-subscriptions": {
         "properties": {
-            'createdAt': {'type': 'string'},
-            'updatedAt': {'type': 'string'},
+            'createdAt': {'type': ['string', 'null']},
+            'updatedAt': {'type': ['string', 'null']},
             "user": {
                 "relation": "to-one",
                 "resource": ["users"],

@@ -1,13 +1,12 @@
 import logging
-import traceback
 
 from aiogram import Router, types
-from aiogram.filters import CommandStart, CommandObject
+from aiogram.filters import CommandObject, CommandStart
 from aiogram.fsm.context import FSMContext
-from dependency_injector.wiring import inject, Provide
+from dependency_injector.wiring import Provide, inject
 
 from dependencies import Deps
-from dto import AuthDTO, UserDTO
+from dto import AuthDTO
 from managers import KeyboardManager, MessageManager
 from services import UserService
 
@@ -19,10 +18,10 @@ router = Router()
 @router.message(CommandStart(deep_link=True))
 @inject
 async def start_handler(
-    message: types.Message,
-    command: CommandObject,
-    state: FSMContext,
-    user_service: UserService = Provide[Deps.services.user]
+        message: types.Message,
+        command: CommandObject,
+        state: FSMContext,
+        user_service: UserService = Provide[Deps.services.user]
 ):
     await state.clear()
     # Собираем данные пользователя из Telegram

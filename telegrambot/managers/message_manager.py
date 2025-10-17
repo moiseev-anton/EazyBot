@@ -2,12 +2,12 @@ import logging
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, Any, Optional
-from aiogram import html
+from typing import Any, Dict, Optional
 
 from jsonapi_client.document import Document
-from dto import UserDTO, FacultyDTO, GroupDTO
 
+from dto import FacultyDTO, GroupDTO, SubscriptionDTO, TeacherDTO, UserDTO
+from dto.base_dto import SubscriptableDTO
 
 logger = logging.getLogger(__name__)
 
@@ -18,13 +18,6 @@ class PeriodDTO:
     date: str
     start_time: str
     end_time: str
-
-
-@dataclass
-class TeacherDTO:
-    id: int
-    full_name: str
-    short_name: str
 
 
 @dataclass
@@ -113,7 +106,7 @@ class ScheduleMessageBuilder:
         lessons = lessons_doc.resources
 
         if not lessons:
-            return cls.EMPTY_SCHEDULE # Занятий нет
+            return cls.EMPTY_SCHEDULE  # Занятий нет
 
         # группируем уроки по дате
         grouped = defaultdict(list)
@@ -144,6 +137,7 @@ class ScheduleMessageBuilder:
 
 
 class MessageManager:
+    # === Регистрация/Авторизация ===
     WELCOME_NEW = "Добро пожаловать, {name}!👋\nРегистрация выполнена успешно."
     WELCOME_BACK = "С возвращением, {name}! 👋"
 
@@ -152,16 +146,31 @@ class MessageManager:
         "failed": "⚠ Произошла ошибка авторизации, повторите попытку позже.",
     }
 
-    _FACULTY_CHOOSING = "Выберите факультет:"
+    # === Навигация ===
+    FACULTY_CHOOSING = "Выберите факультет:"
     _GRADE_CHOOSING = "{faculty_title}\n\nВыберите курс:"
     _GROUPS_CHOOSING = "{faculty_title}\n{grade} курс\n\nВыберите группу:"
-    _SELECTED_GROUP = "Группа: {group_title}"
 
-    _LETTER_CHOOSING = "Выберите букву:"
-    _TEACHERS_CHOOSING = "Выберите преподавателя:"
-    _SELECTED_TEACHER = "Преподаватель: {teacher_full_name}"
+    LETTER_CHOOSING = "Выберите букву:"
+    TEACHERS_CHOOSING = "Выберите преподавателя:"
 
-    _ERROR_DEFAULT = "⚠ Что-то пошло не так, попробуйте снова."
+    # === Экран выбранного объекта (группа/преподаватель) ===
+    _SELECTED_TEMPLATE = ("{label}:\n"
+                          "<b>{display_name}</b>"
+                          "{subscribed_note}")
+
+    _TYPE_LABELS = {GroupDTO: "Группа", TeacherDTO: "Преподаватель"}
+
+    _SUBSCRIBED_NOTE = "\n\n✅ Вы подписаны"
+
+    # === ПРЕДУПРЕЖДЕНИЯ ===
+    ALREADY_HAS_SUBSCRIPTION_WARNING = (
+        "❗ Вы уже подписаны на другое расписание.\n"
+        "Предыдущая подписка будет отменена."
+    )
+
+    # === OШИБКИ ===
+    ERROR_DEFAULT = "⚠ Что-то пошло не так, попробуйте снова."
 
     @classmethod
     def get_start_message(
@@ -187,23 +196,18 @@ class MessageManager:
         return f"{welcome}\n\n{auth_message}" if auth_message else welcome
 
     @staticmethod
-    def get_main_message(user: UserDTO)  -> str:
+    def get_main_message(user: UserDTO) -> str:
         lines = [
             f"👤 <b>{f"{user.first_name} {user.last_name}"}</b>",
             f"🔹 <i>{user.username}</i>\n",
         ]
         if user.subscriptions:
             for sub in user.subscriptions:
-                lines.append(f"⭐️ <b>{sub.display_name}</b>")
+                lines.append(f"⭐️ <b>{sub.button_name}</b>")
         else:
             lines.append(f"<b>☆ не выбрано</b>")
 
         return "\n".join(lines)
-
-    @classmethod
-    def get_faculty_choosing_msg(cls) -> str:
-        """Сообщение для выбора факультета."""
-        return cls._FACULTY_CHOOSING
 
     @classmethod
     def get_grade_choosing_msg(cls, faculty: FacultyDTO) -> str:
@@ -216,28 +220,20 @@ class MessageManager:
         return cls._GROUPS_CHOOSING.format(
             faculty_title=faculty.title, grade=grade
         )
-    
-    @classmethod
-    def get_selected_group_msg(cls, group: GroupDTO) -> str:
-        """Сообщение после выбора группы."""
-        return cls._SELECTED_GROUP.format(group_title=group.display_name)
 
     @classmethod
-    def get_letter_choosing_msg(cls) -> str:
-        return cls._LETTER_CHOOSING
-
-    @classmethod
-    def get_teacher_choosing_msg(cls) -> str:
-        return cls._TEACHERS_CHOOSING
-
-    @classmethod
-    def get_selected_teacher_msg(cls, teacher: TeacherDTO) -> str:
-        return cls._SELECTED_TEACHER.format(teacher_full_name=teacher.full_name)
-
-    @classmethod
-    def get_error_message(cls) -> str:
-        """Возвращает стандартное сообщение об ошибке с клавиатурой 'На главную'."""
-        return cls._ERROR_DEFAULT
+    def get_selected_msg(
+            cls,
+            obj: SubscriptableDTO,
+            subscription: Optional[SubscriptionDTO] = None
+    ) -> str:
+        label = cls._TYPE_LABELS.get(type(obj), "Выбрано")
+        subscribed_note = cls._SUBSCRIBED_NOTE if subscription is not None else ""
+        return cls._SELECTED_TEMPLATE.format(
+            label=label,
+            display_name=obj.display_name,
+            subscribed_note=subscribed_note,
+        )
 
     @staticmethod
     def format_group_schedule(group_title: str, schedule_data: Dict[str, Any]) -> str:

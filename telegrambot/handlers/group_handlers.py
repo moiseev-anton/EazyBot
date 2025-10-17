@@ -1,21 +1,19 @@
 import logging
 
-from aiogram import Router, types, F
+from aiogram import F, Router, types
 from aiogram.fsm.context import FSMContext
-from dependency_injector.wiring import inject, Provide
+from dependency_injector.wiring import Provide, inject
 
 from dependencies import Deps
-from managers import MessageManager, KeyboardManager
+from managers import KeyboardManager, MessageManager
 from managers.keyboard_manager import (
     FacultyCallback,
-    GradeCallback,
-    GroupCallback
+    GradeCallback
 )
 from services import GroupService
-from states import FacultyStates
+from states import GroupStates
 
 logger = logging.getLogger(__name__)
-
 
 router = Router()
 
@@ -23,9 +21,9 @@ router = Router()
 @router.callback_query(F.data == "faculties")
 @inject
 async def faculties_handler(
-    callback: types.CallbackQuery,
-    state: FSMContext,
-    group_service: GroupService = Provide[Deps.services.group],
+        callback: types.CallbackQuery,
+        state: FSMContext,
+        group_service: GroupService = Provide[Deps.services.group],
 ):
     """
     Первый уровень навигации групп.
@@ -36,20 +34,20 @@ async def faculties_handler(
     faculties = group_service.get_faculties()
 
     await callback.message.edit_text(
-        text=MessageManager.get_faculty_choosing_msg(),
+        text=MessageManager.FACULTY_CHOOSING,
         reply_markup=KeyboardManager.get_faculties_keyboard(faculties),
     )
-    await state.set_state(FacultyStates.choosing_faculty)
+    await state.set_state(GroupStates.choosing_faculty)
     await callback.answer()
 
 
 @router.callback_query(FacultyCallback.filter())
 @inject
 async def faculty_grades_handler(
-    callback: types.CallbackQuery,
-    callback_data: FacultyCallback,
-    state: FSMContext,
-    group_service: GroupService = Provide[Deps.services.group],
+        callback: types.CallbackQuery,
+        callback_data: FacultyCallback,
+        state: FSMContext,
+        group_service: GroupService = Provide[Deps.services.group],
 ):
     """
     Второй уровень навигации групп.
@@ -65,17 +63,17 @@ async def faculty_grades_handler(
         text=MessageManager.get_grade_choosing_msg(faculty),
         reply_markup=KeyboardManager.get_grades_keyboard(grades),
     )
-    await state.set_state(FacultyStates.choosing_course)
+    await state.set_state(GroupStates.choosing_grade)
     await callback.answer()
 
 
 @router.callback_query(GradeCallback.filter())
 @inject
 async def course_groups_handler(
-    callback: types.CallbackQuery,
-    callback_data: GradeCallback,
-    state: FSMContext,
-    group_service: GroupService = Provide[Deps.services.group],
+        callback: types.CallbackQuery,
+        callback_data: GradeCallback,
+        state: FSMContext,
+        group_service: GroupService = Provide[Deps.services.group],
 ):
     """
     Третий уровень навигации групп.
@@ -93,26 +91,5 @@ async def course_groups_handler(
         text=MessageManager.get_group_choosing_msg(faculty, chosen_grade),
         reply_markup=KeyboardManager.get_groups_keyboard(groups),
     )
-    await state.set_state(FacultyStates.choosing_group)
-    await callback.answer()
-
-
-@router.callback_query(GroupCallback.filter())
-@inject
-async def group_selected_handler(
-    callback: types.CallbackQuery,
-    callback_data: GroupCallback,
-    state: FSMContext,
-    group_service: GroupService = Provide[Deps.services.group],
-):
-    group_id = callback_data.group_id
-    await state.update_data(group_id=group_id)
-
-    group = group_service.get_group(group_id)
-
-    await callback.message.edit_text(
-        text=MessageManager.get_selected_group_msg(group),
-        reply_markup=KeyboardManager.get_actions_keyboard(group),
-    )
-    await state.set_state(FacultyStates.choosing_action)
+    await state.set_state(GroupStates.choosing_group)
     await callback.answer()

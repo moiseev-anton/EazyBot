@@ -3,7 +3,7 @@ import logging
 from dependency_injector.wiring import Provide, inject
 
 from dto import AuthDTO, AuthResponseDTO, UserDTO
-from repositories import JsonApiAccountRepository, JsonApiUserRepository
+from repositories import JsonApiAccountRepository, JsonApiSubscriptionRepository, JsonApiUserRepository
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +24,11 @@ class UserService:
     @inject
     async def get_user_with_subscriptions(
             self,
-            user_repo: JsonApiUserRepository = Provide["repositories.user"]
+            user_repo: JsonApiUserRepository = Provide["repositories.user"],
+            subscription_repo: JsonApiSubscriptionRepository = Provide["repositories.subscription"]
     ) -> UserDTO:
-        return await user_repo.get_user_with_subscriptions()
+        user = await user_repo.get_user()
+        subscriptions = await subscription_repo.get_user_subscriptions()
+        user.subscriptions = subscriptions
+
+        return user

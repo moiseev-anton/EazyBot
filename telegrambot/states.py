@@ -1,20 +1,20 @@
 from aiogram.fsm.state import State, StatesGroup
 
 
-class FacultyStates(StatesGroup):
+class GroupStates(StatesGroup):
     choosing_faculty = State()
-    choosing_course = State()
+    choosing_grade = State()
     choosing_group = State()
-    choosing_action = State()
-    action = State()
 
 
 class TeacherStates(StatesGroup):
     choosing_letter = State()
     choosing_teacher = State()
-    choosing_action = State()
-    action = State()
 
+class ActionStates(StatesGroup):
+    choosing_action = State()
+    reading_schedule = State()
+    waiting_sub_confirm = State()
 
 class NavigationStates(StatesGroup):
     level_1 = State()

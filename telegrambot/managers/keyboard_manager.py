@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 from aiogram.filters.callback_data import CallbackData
 from aiogram.utils.keyboard import (
@@ -13,6 +13,7 @@ from cache import KeyboardDataStore
 from config import settings
 
 from dto import UserDTO, SubscriptionDTO, FacultyDTO, GroupDTO, TeacherDTO
+from dto.subscription_dto import SubscriptableDTO
 
 logger = logging.getLogger(__name__)
 
@@ -48,10 +49,14 @@ class EntityCallback(CallbackData, prefix="e"):
     id: int
 
 
-class ActionCallback(CallbackData, prefix="action"):
-    action: str
-    type: str
-    id: int
+class SubscriptionCallback(CallbackData, prefix="sub"):
+    action: str  # subscribe, unsubscribe
+    sub_id: Optional[int] = None
+
+
+class ScheduleCallback(CallbackData, prefix="lessons"):
+    source: str  # context, subscription
+    period: str  # today, tomorrow, ahead, week
 
 
 class Button:
@@ -68,38 +73,37 @@ class Button:
         "9": "9️⃣",
     }
 
+    # === Навигация ===
     home = InlineKeyboardButton(text="🏠 На главную", callback_data="main")
+    back = InlineKeyboardButton(text="◀️ Назад", callback_data="back")
+    confirm = InlineKeyboardButton(text="Продолжить", callback_data="confirm")
+
     phone = InlineKeyboardButton(text="📞 Поделиться номером", request_contact=True)
 
-    today = InlineKeyboardButton(text="Сегодня", callback_data="schedule_today")
-    tomorrow = InlineKeyboardButton(text="Завтра", callback_data="schedule_tomorrow")
-    ahead = InlineKeyboardButton(text="Предстоящее", callback_data="schedule_ahead")
-    week = InlineKeyboardButton(text="Неделя", callback_data="week_schedule")
+    # === Кнопки расписания главного экрана ===
+    today = InlineKeyboardButton(text="🗓Сегодня",
+                                 callback_data=ScheduleCallback(source='subscription', period='today').pack())
+    tomorrow = InlineKeyboardButton(text="🗓Завтра",
+                                    callback_data=ScheduleCallback(source='subscription', period='tomorrow').pack())
+    ahead = InlineKeyboardButton(text="🗓Предстоящее",
+                                 callback_data=ScheduleCallback(source='subscription', period='ahead').pack())
+    week = InlineKeyboardButton(text="🗓Неделя",
+                                callback_data=ScheduleCallback(source='subscription', period='week').pack())
 
+    schedule_menu = [
+        [today, tomorrow],
+        [ahead, week]
+    ]
+
+    # === Кнопки главного экрана ===
     groups = InlineKeyboardButton(text="🎓Группы", callback_data="faculties")
-    teachers = InlineKeyboardButton(
-        text="👨‍🏫👩‍🏫Преподаватели", callback_data="alphabet"
-    )
-    # notifications = InlineKeyboardButton(
-    #     text="🔔Уведомления", callback_data="notifications"
-    # )
+    teachers = InlineKeyboardButton(text="👨‍🏫👩‍🏫Преподаватели", callback_data="alphabet")
     site = InlineKeyboardButton(text="🌍Сайт", url=settings.base_link)
-
-    context_schedule = InlineKeyboardButton(
-        text="🗓️ Расписание", callback_data="schedule_context"
-    )
-    subscribe = InlineKeyboardButton(text="📌 Подписаться", callback_data="subscribe")
-
-    back = InlineKeyboardButton(text="◀️ Назад", callback_data="back")
 
     main_menu = [
         [groups, teachers],
         [site],
     ]
-
-    schedule_menu = [[today, tomorrow], [ahead, week]]
-
-    subscribe_menu = [[subscribe], [home]]
 
     @classmethod
     def replace_with_emojis(cls, text: str):
@@ -136,9 +140,9 @@ class KeyboardManager:
     main_with_schedule = InlineKeyboardMarkup(
         inline_keyboard=(Button.schedule_menu + Button.main_menu)
     )
-    subscribe = InlineKeyboardMarkup(inline_keyboard=Button.subscribe_menu)
-    extend_subscribe = InlineKeyboardMarkup(
-        inline_keyboard=[[Button.context_schedule]] + Button.subscribe_menu
+
+    confirm = InlineKeyboardMarkup(
+        inline_keyboard=[[Button.back, Button.confirm]]
     )
 
     def __init__(self, cache_store: KeyboardDataStore):
@@ -188,7 +192,7 @@ class KeyboardManager:
         for group in groups:
             builder.button(
                 text=group.button_name,
-                callback_data=GroupCallback(group_id=group.id).pack(),
+                callback_data=EntityCallback(id=group.id).pack(),
             )
 
         if groups:
@@ -220,7 +224,7 @@ class KeyboardManager:
         for teacher in teachers:
             builder.button(
                 text=teacher.button_name,
-                callback_data=TeacherCallback(teacher_id=teacher.id).pack(),
+                callback_data=EntityCallback(id=teacher.id).pack(),
             )
 
         if teachers:
@@ -232,21 +236,32 @@ class KeyboardManager:
         return builder.as_markup()
 
     @classmethod
-    def get_actions_keyboard(cls, obj: GroupDTO | TeacherDTO,) -> InlineKeyboardMarkup:
+    def get_actions_keyboard(
+            cls,
+            obj: SubscriptableDTO,
+            subscription: Optional[SubscriptionDTO] = None
+    ) -> InlineKeyboardMarkup:
         """Собирает клавиатуру действий для выбранного объекта (группы или учителя)"""
         builder = InlineKeyboardBuilder()
-        obj_type = obj.__class__.__name__
         builder.button(
             text="🗓 Расписание",
-            callback_data=ActionCallback(action='schedule', type=obj_type, id=obj.id).pack()
+            callback_data=ScheduleCallback(source='context', period='week').pack()
         )
-        builder.button(
-            text="⭐ Подписаться",
-            callback_data=ActionCallback(action='subscribe', type=obj_type, id=obj.id).pack()
-        )
+
+        if subscription is not None:
+            builder.button(
+                text="🚫 Отписаться",
+                callback_data=SubscriptionCallback(action='unsubscribe', sub_id=subscription.id).pack()
+            )
+        else:
+            builder.button(
+                text="⭐ Подписаться",
+                callback_data=SubscriptionCallback(action='subscribe').pack()
+            )
+
         if obj.link is not None:
             builder.button(
-                text="🌍 На сайте",
+                text="🔗 На сайте",
                 url=settings.base_link + obj.link
             )
 

@@ -11,12 +11,13 @@ import sys
 from config import settings
 from dependencies import Deps
 from handlers import (
+    entity_router,
     start_router,
     main_router,
     faculty_router,
     teacher_router,
     navigation_router,
-    action_router,
+    subscription_router
 )
 from middleware import UserContextMiddleware
 from tasks import setup_periodic_task_scheduler
@@ -52,12 +53,13 @@ async def main():
     dp.message.middleware(UserContextMiddleware())
     dp.callback_query.middleware(UserContextMiddleware())
 
-    dp.include_router(action_router)
     dp.include_router(start_router)
     dp.include_router(main_router)
     dp.include_router(faculty_router)
     dp.include_router(teacher_router)
     dp.include_router(navigation_router)
+    dp.include_router(subscription_router)
+    dp.include_router(entity_router)
     dp.startup.register(on_startup)
     dp.shutdown.register(on_shutdown)
 
