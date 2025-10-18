@@ -1,6 +1,6 @@
 from dependency_injector import containers, providers
 
-from services import GroupService, SubscriptionService, TeacherService, UserService
+from services import GroupService, LessonService, SubscriptionService, TeacherService, UserService
 
 
 class Services(containers.DeclarativeContainer):
@@ -8,4 +8,4 @@ class Services(containers.DeclarativeContainer):
     teacher = providers.Singleton(TeacherService)
     group = providers.Singleton(GroupService)
     subscription = providers.Factory(SubscriptionService)
-    # lesson = providers.Factory(LessonService)
+    lesson = providers.Factory(LessonService)
