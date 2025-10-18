@@ -1,8 +1,6 @@
-from dataclasses import dataclass
 from typing import Optional
-from datetime import date
 
-from pydantic import BaseModel, PrivateAttr
+from pydantic import BaseModel
 
 from dto.group_dto import GroupDTO
 from dto.teacher_dto import TeacherDTO
@@ -10,7 +8,6 @@ from dto.teacher_dto import TeacherDTO
 
 class LessonDTO(BaseModel):
     id: int
-    _resource_type: str = PrivateAttr(default="lessons")
     number: int
     date: str
     startTime: str
@@ -25,6 +22,11 @@ class LessonDTO(BaseModel):
 
     class Config:
         frozen = True
+        _resource_type = "lessons"
+
+    @property
+    def resource_type(self) -> int:
+        return self.Config._resource_type
 
     @classmethod
     def from_jsonapi(
@@ -47,5 +49,3 @@ class LessonDTO(BaseModel):
             _teacher_id=int(l.teacher._resource_identifier.id),
             teacher=teacher,
         )
-
-

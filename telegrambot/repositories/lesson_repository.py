@@ -1,63 +1,73 @@
 import logging
-from dataclasses import dataclass
-from typing import List, Optional
-from datetime import date, timedelta
+from typing import Any
 
-from jsonapi_client import Inclusion, Modifier, Filter
+from jsonapi_client import Filter, Inclusion, Modifier
 from jsonapi_client.document import Document
-from jsonapi_client.resourceobject import ResourceObject
 
-from api_client import AsyncClientSession
-from dto import GroupDTO, LessonDTO, DateRange
-from dto.faculty_dto import FacultyDTO
+from dto import DateRangeDTO, GroupDTO, LessonDTO, TeacherDTO
+from dto.base_dto import SubscriptableDTO
+from repositories.base_repository import JsonApiBaseRepository
+from repositories.exceptions import ApiError
 
 logger = logging.getLogger(__name__)
 
 
-class JsonApiLessonRepository:
+class JsonApiLessonRepository(JsonApiBaseRepository):
     resource_name = "lessons"
 
-    resource_to_filter_map = {
-        "groups": "group",
+    allowed_filters = {"subgroup", "group", "lesson", "date_from", "date_to"}
 
+    included_types_map = {
+        "teachers": TeacherDTO,
+        "groups": GroupDTO,
     }
 
-    def __init__(self, api_client: AsyncClientSession):
-        self.api_client = api_client
+    def _get_or_create_dto(self, resource, cache: dict):
+        key = (resource.type, resource.id)
+        if key not in cache:
+            DtoClass = self.included_types_map.get(resource.type)
+            if not DtoClass:
+                raise ValueError(f"Unsupported related resource type: {resource.type}")
+            cache[key] = DtoClass.from_jsonapi(resource)
+        return cache[key]
 
     async def get_lesson(self, lesson_id: str) -> LessonDTO:
         document: Document = await self.api_client.get(self.resource_name, lesson_id)
         lesson_res = document.resource
         return LessonDTO.from_jsonapi(lesson_res)
 
-    async def get_lessons(self, obj, date_range: DateRange, **filters):
-        filter_key = obj.__config__.filter_key
-        allowed = obj.__config__.allowed_filters
-
-        applied_filters = [Filter(**{filter_key: obj.id})]
-
-        if date_range.date_from:
-            applied_filters.append(Filter(date_from=date_range.date_from.isoformat()))
-        if date_range.date_to:
-            applied_filters.append(Filter(date_to=date_range.date_to.isoformat()))
+    async def get_lessons(self, obj: SubscriptableDTO, date_range: DateRangeDTO, **filters):
+        modifiers = [
+            Filter(**{obj.relation_name: obj.id}),
+            Filter(date_from=date_range.from_str),
+            Filter(date_to=date_range.to_str),
+            Inclusion('teacher', 'group'),
+        ]
 
         # Проверка дополнительных фильтров
         for k, v in filters.items():
-            if k not in allowed:
+            if k not in self.allowed_filters:
                 raise ValueError(f"Filter '{k}' not allowed for {obj.__class__.__name__}")
-            applied_filters.append(Filter(**{k: v}))
+            modifiers.append(Filter(**{k: v}))
 
-        applied_filters.append(Inclusion('teachers', 'groups'))
-        modifier = sum(applied_filters, Modifier())
+        modifier = sum(modifiers, Modifier())
 
-        document = await self.api_client.get("lessons", modifier)
+        try:
+            document = await self.api_client.get(self.resource_name, modifier)
 
-        if hasattr(document, "included") and document.included:
-            grouped: dict[str, dict[str, ResourceObject]] = {}
+            lessons: list[LessonDTO] = []
+            related_dto_cache: dict[tuple[str, str], Any] = {}
 
-            for resource in document.included:
-                grouped.setdefault(resource.type, {})[resource.id] = resource
+            for lesson in document.resources:
+                await lesson.group.fetch()
+                await lesson.teacher.fetch()
 
+                group_dto = self._get_or_create_dto(lesson.group, related_dto_cache)
+                teacher_dto = self._get_or_create_dto(lesson.teacher, related_dto_cache)
 
+                lessons.append(LessonDTO.from_jsonapi(lesson, group_dto, teacher_dto))
 
+            return lessons
 
+        except Exception as e:
+            raise ApiError(f"Failed to get lessons for {obj.__class__.__name__} [ID={obj.id}]: {e}")
