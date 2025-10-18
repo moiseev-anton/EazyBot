@@ -8,12 +8,6 @@ from dto.group_dto import GroupDTO
 from dto.teacher_dto import TeacherDTO
 
 
-@dataclass
-class DateRange:
-    date_from: Optional[date] = None
-    date_to: Optional[date] = None
-
-
 class LessonDTO(BaseModel):
     id: int
     _resource_type: str = PrivateAttr(default="lessons")
