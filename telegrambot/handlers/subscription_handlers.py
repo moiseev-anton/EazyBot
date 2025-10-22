@@ -5,6 +5,7 @@ from aiogram.fsm.context import FSMContext
 from dependency_injector.wiring import Provide, inject
 
 from dependencies import Deps
+from enums import Branch, SubscriptionAction
 from handlers.main_handler import main_handler
 from handlers.entity_handler import entity_handler
 from managers import MessageManager
@@ -15,7 +16,8 @@ from states import ActionStates, GroupStates, TeacherStates
 logger = logging.getLogger(__name__)
 router = Router()
 
-@router.callback_query(SubscriptionCallback.filter(F.action == 'subscribe'))
+
+@router.callback_query(SubscriptionCallback.filter(F.action == SubscriptionAction.SUBSCRIBE))
 @inject
 async def subscribe_handler(
         callback: types.CallbackQuery,
@@ -48,10 +50,12 @@ async def create_subscription_handler(
     obj_id = data.get("obj_id")
 
     match branch:
-        case "teachers":
+        case Branch.TEACHERS:
             obj = teacher_service.get_teacher(obj_id)
-        case "groups":
+        case Branch.GROUPS:
             obj = group_service.get_group(obj_id)
+        case _:
+            raise ValueError()
 
     new_sub = await subscription_service.subscribe(obj)
 
@@ -60,7 +64,7 @@ async def create_subscription_handler(
     return
 
 
-@router.callback_query(SubscriptionCallback.filter(F.action == 'unsubscribe'))
+@router.callback_query(SubscriptionCallback.filter(F.action == SubscriptionAction.UNSUBSCRIBE))
 @inject
 async def unsubscribe_handler(
         callback: types.CallbackQuery,

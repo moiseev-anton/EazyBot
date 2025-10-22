@@ -3,6 +3,7 @@ import logging
 from aiogram import F, Router, types
 from aiogram.fsm.context import FSMContext
 
+from enums import Branch, NavigationAction
 from handlers.entity_handler import entity_handler
 from handlers.group_handlers import course_groups_handler, faculties_handler, faculty_grades_handler
 from handlers.main_handler import main_handler
@@ -15,7 +16,7 @@ logger = logging.getLogger(__name__)
 router = Router()
 
 
-@router.callback_query(F.data == "back")
+@router.callback_query(F.data == NavigationAction.BACK)
 async def back_handler(
         callback: types.CallbackQuery, state: FSMContext
 ):
@@ -32,7 +33,7 @@ async def back_handler(
     branch = data.get("branch")
 
     match branch:
-        case "teachers":
+        case Branch.TEACHERS:
             match current_state:
                 # Возврат от выбора преподавателя к выбору буквы
                 case TeacherStates.choosing_teacher.state:
@@ -51,7 +52,7 @@ async def back_handler(
                     return
                     # await handle_error(callback, state)
 
-        case "groups":
+        case Branch.GROUPS:
             match current_state:
                 # Возврат от выбора курса к выбору факультета
                 case GroupStates.choosing_grade.state:
@@ -83,7 +84,7 @@ async def back_handler(
             return
 
 
-@router.callback_query(F.data == "confirm")
+@router.callback_query(F.data == NavigationAction.CONFIRM)
 async def confirm_handler(callback: types.CallbackQuery, state: FSMContext):
     current_state = await state.get_state()
 

@@ -14,6 +14,7 @@ from config import settings
 
 from dto import UserDTO, SubscriptionDTO, FacultyDTO, GroupDTO, TeacherDTO
 from dto.subscription_dto import SubscriptableDTO
+from enums import EntitySource
 
 logger = logging.getLogger(__name__)
 

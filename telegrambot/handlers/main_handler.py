@@ -4,12 +4,13 @@ from dependency_injector.wiring import inject, Provide
 
 from dependencies import Deps
 from managers import MessageManager, KeyboardManager
+from enums import NavigationAction
 from services import UserService
 
 router = Router()
 
 
-@router.callback_query(F.data == "main")
+@router.callback_query(F.data == NavigationAction.MAIN)
 @inject
 async def main_handler(
         callback: types.CallbackQuery,

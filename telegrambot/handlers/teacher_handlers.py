@@ -7,6 +7,7 @@ from dependency_injector.wiring import Provide, inject
 from dependencies import Deps
 from managers import MessageManager
 from managers.keyboard_manager import AlphabetCallback, KeyboardManager
+from enums import Branch
 from services import TeacherService
 from states import TeacherStates
 
@@ -25,7 +26,7 @@ async def alphabet_handler(
     Первый уровень навигации преподавателей.
     Ответ - клавиатура с алфавитным указателем.
     """
-    await state.update_data(branch="teachers")
+    await state.update_data(branch=Branch.TEACHERS)
 
     letters = teacher_service.get_letters()
 

@@ -5,6 +5,7 @@ from aiogram.fsm.context import FSMContext
 from dependency_injector.wiring import Provide, inject
 
 from dependencies import Deps
+from enums import Branch, NavigationAction
 from managers import KeyboardManager, MessageManager
 from managers.keyboard_manager import (
     FacultyCallback,
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 router = Router()
 
 
-@router.callback_query(F.data == "faculties")
+@router.callback_query(F.data == NavigationAction.FACULTIES)
 @inject
 async def faculties_handler(
         callback: types.CallbackQuery,
@@ -29,7 +30,7 @@ async def faculties_handler(
     Первый уровень навигации групп.
     Ответ - клавиатура с факультетами.
     """
-    await state.update_data(branch="groups")
+    await state.update_data(branch=Branch.GROUPS)
 
     faculties = group_service.get_faculties()
 

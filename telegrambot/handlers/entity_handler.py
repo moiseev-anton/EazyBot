@@ -5,8 +5,10 @@ from aiogram.fsm.context import FSMContext
 from dependency_injector.wiring import Provide, inject
 
 from dependencies import Deps
-from managers import MessageManager
-from managers.keyboard_manager import EntityCallback, KeyboardManager
+from enums import Branch
+from fsm_utils import get_state_data
+from managers import KeyboardManager, MessageManager
+from managers.button_manager import EntityCallback
 from services import GroupService, SubscriptionService, TeacherService
 from states import ActionStates
 
@@ -30,14 +32,14 @@ async def entity_handler(
     await state.update_data(obj_id=obj_id)
 
     match branch:
-        case "teachers":
+        case Branch.TEACHERS:
             obj = teacher_service.get_teacher(obj_id)
 
-        case "groups":
+        case Branch.GROUPS:
             obj = group_service.get_group(obj_id)
 
         case _:
-            raise ValueError
+            ValueError(f"Unknown navigation branch: {branch}")
 
     subscription = await subscription_service.get_subscription_by_target(obj)
 
