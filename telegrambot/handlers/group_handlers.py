@@ -2,16 +2,13 @@ import logging
 
 from aiogram import F, Router, types
 from aiogram.fsm.context import FSMContext
-from dependency_injector.wiring import Provide, inject
+from dependency_injector.wiring import inject, Provide
 
 from dependencies import Deps
 from enums import Branch, NavigationAction
 from fsm_utils import get_state_data
 from managers import KeyboardManager, MessageManager
-from managers.keyboard_manager import (
-    FacultyCallback,
-    GradeCallback
-)
+from managers.button_manager import FacultyCallback, GradeCallback
 from services import GroupService
 from states import GroupStates
 

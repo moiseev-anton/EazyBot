@@ -1,8 +1,6 @@
 import logging
-from datetime import date
-from typing import Union
 
-from dependency_injector.wiring import Provide, inject
+from dependency_injector.wiring import inject, Provide
 
 from dto import DateSpanDTO, LessonDTO
 from dto.base_dto import SubscriptableDTO

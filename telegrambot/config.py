@@ -31,7 +31,6 @@ class Settings(BaseSettings):
     project_name: str = "TelegramBot"
 
     model_config = SettingsConfigDict(
-        # env_prefix="TELEGRAM_",
         env_file=BASE_DIR.parent / ".env",
         env_file_encoding="utf-8",
         case_sensitive=False,

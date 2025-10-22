@@ -2,18 +2,17 @@ import logging
 
 from aiogram import F, Router, types
 from aiogram.fsm.context import FSMContext
-from dependency_injector.wiring import Provide, inject
+from dependency_injector.wiring import inject, Provide
 
 from dependencies import Deps
 from enums import Branch, SubscriptionAction
 from fsm_utils import get_state_data
 from handlers.entity_handler import entity_handler
 from handlers.main_handler import main_handler
-from handlers.entity_handler import entity_handler
-from managers import MessageManager
-from managers.keyboard_manager import EntityCallback, KeyboardManager, SubscriptionCallback
+from managers import KeyboardManager, MessageManager
+from managers.button_manager import EntityCallback, SubscriptionCallback
 from services import GroupService, SubscriptionService, TeacherService
-from states import ActionStates, GroupStates, TeacherStates
+from states import ActionStates
 
 logger = logging.getLogger(__name__)
 router = Router()

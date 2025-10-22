@@ -2,7 +2,7 @@ import logging
 
 from aiogram import Router, types
 from aiogram.fsm.context import FSMContext
-from dependency_injector.wiring import Provide, inject
+from dependency_injector.wiring import inject, Provide
 
 from dependencies import Deps
 from enums import Branch
