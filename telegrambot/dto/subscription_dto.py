@@ -1,10 +1,9 @@
 from jsonapi_client.resourceobject import ResourceObject
 from pydantic import BaseModel
 
+from dto.base_dto import SubscriptableDTO
 from dto.group_dto import GroupDTO
 from dto.teacher_dto import TeacherDTO
-from dto.base_dto import SubscriptableDTO
-
 
 
 class SubscriptionDTO(BaseModel):
@@ -31,6 +30,10 @@ class SubscriptionDTO(BaseModel):
     def button_name(self) -> str:
         return self.object.button_name
 
+    @property
+    def link(self):
+        return self.object.link
+
     @classmethod
     def from_jsonapi(cls, sub: 'ResourceObject', object: SubscriptableDTO) -> "SubscriptionDTO":
         return cls(
@@ -38,7 +41,3 @@ class SubscriptionDTO(BaseModel):
             user_id=sub.user._resource_identifier.id,
             object=object
         )
-
-
-
-

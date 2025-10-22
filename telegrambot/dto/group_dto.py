@@ -8,7 +8,7 @@ class GroupDTO(SubscriptableDTO):
     id: int
     title: str
     grade: int
-    link: str
+    link: Optional[str] = None
     faculty_id: int
     faculty: Optional[FacultyDTO] = None
 
@@ -32,7 +32,7 @@ class GroupDTO(SubscriptableDTO):
         return cls(
             id=int(g.id),
             title=g.title,
-            link=g.link,
+            link=getattr(g, "link", None),
             grade=int(g.grade),
             faculty_id=int(g.faculty._resource_identifier.id),
             faculty=faculty
