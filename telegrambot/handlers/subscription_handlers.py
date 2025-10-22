@@ -59,7 +59,7 @@ async def create_subscription_handler(
 
     new_sub = await subscription_service.subscribe(obj)
 
-    await callback.answer("✅ Успешно!")
+    await callback.answer("Подписка создана!👌")
     await main_handler(callback, state)
     return
 
@@ -74,6 +74,7 @@ async def unsubscribe_handler(
 ):
     sub_id = callback_data.sub_id
     await subscription_service.unsubscribe(sub_id)
+    await callback.answer(" Подписка удалена!👌")
 
     current_state = await state.get_state()
     if current_state == ActionStates.choosing_action:
