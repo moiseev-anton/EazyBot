@@ -17,7 +17,8 @@ from handlers import (
     faculty_router,
     teacher_router,
     navigation_router,
-    subscription_router
+    subscription_router,
+    lessons_router
 )
 from middleware import UserContextMiddleware
 from tasks import setup_periodic_task_scheduler
@@ -53,13 +54,16 @@ async def main():
     dp.message.middleware(UserContextMiddleware())
     dp.callback_query.middleware(UserContextMiddleware())
 
-    dp.include_router(start_router)
-    dp.include_router(main_router)
-    dp.include_router(faculty_router)
-    dp.include_router(teacher_router)
-    dp.include_router(navigation_router)
-    dp.include_router(subscription_router)
-    dp.include_router(entity_router)
+    dp.include_routers(
+        entity_router,
+        faculty_router,
+        main_router,
+        navigation_router,
+        start_router,
+        subscription_router,
+        teacher_router,
+        lessons_router,
+    )
     dp.startup.register(on_startup)
     dp.shutdown.register(on_shutdown)
 
