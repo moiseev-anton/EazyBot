@@ -1,81 +1,51 @@
 import logging
-from collections import defaultdict
-from dataclasses import dataclass
-from datetime import datetime
-from typing import Any, Dict, Optional
+from datetime import date, timedelta
+from typing import Callable, Optional
 
-from jsonapi_client.document import Document
-
-from dto import FacultyDTO, GroupDTO, SubscriptionDTO, TeacherDTO, UserDTO
+from dto import DateSpanDTO, FacultyDTO, GroupDTO, LessonDTO, SubscriptionDTO, TeacherDTO, UserDTO
 from dto.base_dto import SubscriptableDTO
 
 logger = logging.getLogger(__name__)
 
 
-@dataclass
-class PeriodDTO:
-    lesson_number: int
-    date: str
-    start_time: str
-    end_time: str
+class LessonFormatter:
+    """Форматирует отдельный урок в текст"""
 
-
-@dataclass
-class LessonDTO:
-    period: PeriodDTO
-    group: str
-    subgroup: str
-    subject: str
-    classroom: str
-    teacher: TeacherDTO
-
-    def __post_init__(self):
-        # Преобразуем строковые данные в объекты Period и Teacher
-        if isinstance(self.period, dict):
-            self.period = PeriodDTO(**self.period)
-        if isinstance(self.teacher, dict):
-            self.teacher = TeacherDTO(**self.teacher)
-
-    def format_time(self) -> str:
-        """Форматирует время урока"""
-        return self.period.start_time[:5]  # HH:MM
-
-    def format_subgroup(self) -> str:
-        """Форматирует подгруппу (если есть)"""
-        return f"{self.subgroup} подгруппа" if self.subgroup != "0" else None
-
-    def format_for_group(self) -> str:
-        """Форматирует урок для отображения в групповом расписании"""
-        lines = [
-            f"{self._get_emoji()}  <b>{self.format_time()}</b>   📍{self.classroom or '-'}",
-            f"<b>{self.subject}</b>",
-            self.format_subgroup(),
-            f"<i>{self.teacher.short_name}</i>" if self.teacher else None
-        ]
-        return "\n".join(filter(None, lines))
-
-    def format_for_teacher(self) -> str:
-        """Форматирует урок для отображения в преподавательском расписании"""
-        lines = [
-            f"{self._get_emoji()}  <b>{self.format_time()}</b>   📍{self.classroom or '-'}",
-            f"<b>{self.subject}</b>",
-            self.format_subgroup(),
-            f"<i>{self.group}</i>"
-        ]
-        return "\n".join(filter(None, lines))
-
-    def _get_emoji(self) -> str:
-        """Возвращает эмодзи для номера урока"""
-        emoji_map = {
+    @staticmethod
+    def emoji_for_number(number: int) -> str:
+        mapping = {
             1: "1️⃣", 2: "2️⃣", 3: "3️⃣", 4: "4️⃣",
             5: "5️⃣", 6: "6️⃣", 7: "7️⃣", 8: "8️⃣"
         }
-        return emoji_map.get(self.period.lesson_number, str(self.period.lesson_number))
+        return mapping.get(number, str(number))
+
+    @classmethod
+    def format_for_group(cls, lesson: LessonDTO) -> str:
+        lines = [
+            f"{cls.emoji_for_number(lesson.number)}  <b>{lesson.startTime[:5]}</b>   📍{lesson.classroom or '-'}",
+            f"<b>{lesson.subject}</b>",
+            (f"{lesson.subgroup} подгруппа" if lesson.subgroup and lesson.subgroup != "0" else None),
+            f"<i>{lesson.teacher.short_name}</i>" if lesson.teacher else None,
+        ]
+        return "\n".join(filter(None, lines))
+
+    @classmethod
+    def format_for_teacher(cls, lesson: LessonDTO) -> str:
+        lines = [
+            f"{cls.emoji_for_number(lesson.number)}  <b>{lesson.startTime[:5]}</b>   📍{lesson.classroom or '-'}",
+            f"<b>{lesson.subject}</b>",
+            (f"{lesson.subgroup} подгруппа" if lesson.subgroup and lesson.subgroup != "0" else None),
+            f"<i>{lesson.group.title}</i>" if lesson.group else None,
+        ]
+        return "\n".join(filter(None, lines))
 
 
 class ScheduleMessageBuilder:
-    """Класс для построения сообщений с расписанием"""
-    EMPTY_SCHEDULE = "📅 Занятий нет"
+    """Формирует полное сообщение с расписанием"""
+    _FORMATTERS: dict[type, Callable[[LessonDTO], str]] = {
+        GroupDTO: LessonFormatter.format_for_group,
+        TeacherDTO: LessonFormatter.format_for_teacher,
+    }
 
     _WEEKDAYS_RU = {
         0: "ПОНЕДЕЛЬНИК",
@@ -88,52 +58,57 @@ class ScheduleMessageBuilder:
     }
 
     @classmethod
-    def _format_date(cls, date_str: str) -> str:
-        """Форматирует дату: Понедельник ДД.ММ.ГГГГ"""
-        date_obj = datetime.strptime(date_str, "%Y-%m-%d")
-        day_name = cls._WEEKDAYS_RU[date_obj.weekday()]
-        date_formatted = date_obj.strftime("%d.%m.%Y")
-        return f"<b>{day_name}</b> {date_formatted}"
-
-    @classmethod
     def build_schedule(
             cls,
-            title: str,
-            lessons_doc: Document,
-            for_teacher: bool = False
+            target_obj: SubscriptableDTO,
+            lessons: list[LessonDTO],
+            date_range: DateSpanDTO,
     ) -> str:
-        """Строит сообщение с расписанием"""
-        lessons = lessons_doc.resources
+        """Строит итоговое сообщение с расписанием"""
+        formatter = cls._resolve_formatter(target_obj)
+        title = getattr(target_obj, "button_name", "Расписание")
 
-        if not lessons:
-            return cls.EMPTY_SCHEDULE  # Занятий нет
+        grouped = cls._group_by_date(lessons)
 
-        # группируем уроки по дате
-        grouped = defaultdict(list)
+        lines = [f"🗓️ <b>{title}</b>", ""]
+
+        for current_date in cls._iter_dates(date_range):
+            lines.append(cls._format_date(current_date))
+            day_lessons = grouped.get(current_date.isoformat())
+            if not day_lessons:
+                lines.append("<i>Занятий нет</i>\n")
+                continue
+
+            formatted_lessons = [formatter(lesson) for lesson in sorted(day_lessons, key=lambda l: l.number)]
+            lines.append(f"<blockquote>{'\n\n'.join(formatted_lessons)}</blockquote>\n")
+
+        return "\n".join(lines).strip()
+
+    @staticmethod
+    def _resolve_formatter(target_obj: SubscriptableDTO) -> Callable[[LessonDTO], str]:
+        for cls_type, func in ScheduleMessageBuilder._FORMATTERS.items():
+            if isinstance(target_obj, cls_type):
+                return func
+        raise TypeError(f"No formatter found for type {type(target_obj)}")
+
+    @staticmethod
+    def _group_by_date(lessons: list[LessonDTO]) -> dict[str, list[LessonDTO]]:
+        grouped = {}
         for lesson in lessons:
-            grouped[lesson.date].append(lesson)
+            grouped.setdefault(lesson.date, []).append(lesson)
+        return grouped
 
-        # сортируем даты
-        sorted_dates = sorted(grouped.keys())
+    @classmethod
+    def _iter_dates(cls, date_range: DateSpanDTO):
+        current = date_range.start
+        while current <= date_range.end:
+            yield current
+            current += timedelta(days=1)
 
-        message_lines = [f"🗓️ <b>{title}</b>", ""]
-
-        for date_str in sorted_dates:
-            message_lines.append(cls._format_date(date_str))
-
-            lessons_for_day = grouped[date_str]
-
-            lessons = [LessonDTO(**lesson_data) for lesson_data in day["lessons"]]
-            formatted_lessons = [
-                lesson.format_for_teacher() if for_teacher else lesson.format_for_group()
-                for lesson in lessons
-            ]
-
-            message_lines.append(f"<blockquote>{'\n\n'.join(formatted_lessons)}</blockquote>")
-            message_lines.append("")
-
-        # Убираем последнюю пустую строку
-        return "\n".join(message_lines[:-1])
+    @classmethod
+    def _format_date(cls, day: date) -> str:
+        weekday = cls._WEEKDAYS_RU[day.weekday()]
+        return f"<b>{weekday}</b> {day.strftime('%d.%m.%Y')}"
 
 
 class MessageManager:
@@ -200,6 +175,7 @@ class MessageManager:
         lines = [
             f"👤 <b>{f"{user.first_name} {user.last_name}"}</b>",
             f"🔹 <i>{user.username}</i>\n",
+            "Расписание:"
         ]
         if user.subscriptions:
             for sub in user.subscriptions:
@@ -236,11 +212,6 @@ class MessageManager:
         )
 
     @staticmethod
-    def format_group_schedule(group_title: str, schedule_data: Dict[str, Any]) -> str:
-        """Форматирует расписание для группы"""
-        return ScheduleMessageBuilder.build_schedule(group_title, schedule_data)
-
-    @staticmethod
-    def format_teacher_schedule(teacher_name: str, schedule_data: Dict[str, Any]) -> str:
-        """Форматирует расписание для преподавателя"""
-        return ScheduleMessageBuilder.build_schedule(teacher_name, schedule_data, for_teacher=True)
+    def format_schedule(target_obj: SubscriptableDTO, lessons: list[LessonDTO], date_range: DateSpanDTO) -> str:
+        """Форматирует сообщение с расписанием для группы или преподавателя"""
+        return ScheduleMessageBuilder.build_schedule(target_obj, lessons, date_range)
