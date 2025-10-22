@@ -6,6 +6,8 @@ from dependency_injector.wiring import Provide, inject
 
 from dependencies import Deps
 from enums import Branch, SubscriptionAction
+from fsm_utils import get_state_data
+from handlers.entity_handler import entity_handler
 from handlers.main_handler import main_handler
 from handlers.entity_handler import entity_handler
 from managers import MessageManager
@@ -36,7 +38,6 @@ async def subscribe_handler(
         await create_subscription_handler(callback, state)
 
 
-
 @inject
 async def create_subscription_handler(
         callback: types.CallbackQuery,
@@ -45,9 +46,9 @@ async def create_subscription_handler(
         group_service: GroupService = Provide[Deps.services.group],
         subscription_service: SubscriptionService = Provide[Deps.services.subscription]
 ):
-    data = await state.get_data()
-    branch = data.get("branch")
-    obj_id = data.get("obj_id")
+    data = await get_state_data(state, required_keys=('branch', 'obj_id'))
+    branch = data["branch"]
+    obj_id = data["obj_id"]
 
     match branch:
         case Branch.TEACHERS:
@@ -76,9 +77,9 @@ async def unsubscribe_handler(
     await subscription_service.unsubscribe(sub_id)
 
     current_state = await state.get_state()
-    data = await state.get_data()
     if current_state == ActionStates.choosing_action:
-        fake_callback_data = EntityCallback(id=data.get("obj_id"))
+        data = await get_state_data(state, required_keys=("obj_id",))
+        fake_callback_data = EntityCallback(id=data["obj_id"])
         await entity_handler(callback, fake_callback_data, state)
     else:
         await main_handler(callback, state)

@@ -26,8 +26,9 @@ async def entity_handler(
         group_service: GroupService = Provide[Deps.services.group],
         subscription_service: SubscriptionService = Provide[Deps.services.subscription]
 ):
-    data = await state.get_data()
-    branch = data.get("branch")
+    data = await get_state_data(state, required_keys=("branch",))
+    branch = data["branch"]
+
     obj_id = callback_data.id
     await state.update_data(obj_id=obj_id)
 

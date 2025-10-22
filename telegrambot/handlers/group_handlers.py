@@ -6,6 +6,7 @@ from dependency_injector.wiring import Provide, inject
 
 from dependencies import Deps
 from enums import Branch, NavigationAction
+from fsm_utils import get_state_data
 from managers import KeyboardManager, MessageManager
 from managers.keyboard_manager import (
     FacultyCallback,
@@ -80,9 +81,10 @@ async def course_groups_handler(
     Третий уровень навигации групп.
     Ответ - клавиатура с группами выбранного факультета и курса.
     """
+    data = await get_state_data(state, required_keys=("faculty_id",))
+    faculty_id = data["faculty_id"]
+
     chosen_grade = callback_data.grade
-    data = await state.get_data()
-    faculty_id = data.get("faculty_id")
     await state.update_data(grade=chosen_grade)
 
     faculty = group_service.get_faculty(faculty_id)
