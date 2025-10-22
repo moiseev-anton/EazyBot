@@ -32,10 +32,25 @@ class KeyboardManager:
     confirm = InlineKeyboardMarkup(inline_keyboard=[[Button.back, Button.confirm]])
 
     @classmethod
-    def get_main_keyboard(cls, user_dto: UserDTO) -> InlineKeyboardMarkup:
-        if user_dto.subscriptions:
-            return cls.main_with_schedule
-        return cls.main_base
+    @ttl_cache(maxsize=1000, ttl=180)
+    def get_main_keyboard(cls, subscription_id: Optional[int | str] = None,
+                          endpoint: Optional[str] = None) -> InlineKeyboardMarkup:
+        if not subscription_id:
+            return cls.main_base  # только базовое меню
+
+        builder = InlineKeyboardBuilder()
+        for row in Button.schedule_menu(source=EntitySource.SUBSCRIPTION):
+            builder.row(*row)
+
+        builder.row(Button.unsubscribe(subscription_id))
+        builder.row(Button.groups, Button.teachers)
+
+        if endpoint is not None:
+            builder.row(Button.page_link(endpoint))
+        else:
+            builder.row(Button.site)
+
+        return builder.as_markup()
 
     @staticmethod
     @ttl_cache(maxsize=1, ttl=60 * 20)
@@ -125,28 +140,50 @@ class KeyboardManager:
     ) -> InlineKeyboardMarkup:
         """Собирает клавиатуру действий для выбранного объекта (группы или учителя)"""
         builder = InlineKeyboardBuilder()
-        builder.button(
-            text="🗓 Расписание",
-            callback_data=ScheduleCallback(source='context', period='week').pack()
-        )
+        for row in Button.schedule_menu(source=EntitySource.CONTEXT):
+            builder.row(*row)
 
         if subscription is not None:
-            builder.button(
-                text="🚫 Отписаться",
-                callback_data=SubscriptionCallback(action='unsubscribe', sub_id=subscription.id).pack()
-            )
+            builder.add(Button.unsubscribe(subscription.id))
         else:
-            builder.button(
-                text="⭐ Подписаться",
-                callback_data=SubscriptionCallback(action='subscribe').pack()
-            )
+            builder.add(Button.subscribe)
 
         if obj.link is not None:
+            builder.add(Button.page_link(obj.link))
+
+        builder.adjust(2, 2, 1)
+        builder.row(Button.back, Button.home)
+        return builder.as_markup()
+
+    @classmethod
+    def get_schedule_keyboard(
+            cls,
+            callback_data: LessonsCallback,
+            date_span: DateSpanDTO,
+    ) -> InlineKeyboardMarkup:
+        """Собирает клавиатуру действий для выбранного объекта (группы или учителя)"""
+        mode, shift, source = callback_data.mode, callback_data.shift, callback_data.source
+        today = date.today()
+
+        builder = InlineKeyboardBuilder()
+
+        if (today - date_span.end).days <= 180:
             builder.button(
-                text="🔗 На сайте",
-                url=settings.base_link + obj.link
+                text="◀️",
+                callback_data=LessonsCallback(source=source, mode=mode, shift=shift - 1).pack(),
             )
 
-        builder.adjust(1)
-        builder.row(Button.back, Button.home)
+        builder.button(
+            text="🔄 Обновить" if date_span.start <= today <= date_span.end else "🔄 Сегодня",
+            callback_data=LessonsCallback(source=source, mode=mode).pack(),
+        )
+
+        if (date_span.end - today).days <= 4:
+            builder.button(
+                text="▶️",
+                callback_data=LessonsCallback(source=source, mode=mode, shift=shift + 1).pack()
+            )
+
+        builder.adjust(3)
+        builder.row(Button.home)
         return builder.as_markup()
