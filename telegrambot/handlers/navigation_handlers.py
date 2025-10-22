@@ -9,7 +9,7 @@ from handlers.group_handlers import course_groups_handler, faculties_handler, fa
 from handlers.main_handler import main_handler
 from handlers.subscription_handlers import create_subscription_handler
 from handlers.teacher_handlers import alphabet_handler, teachers_bucket_handler
-from managers.keyboard_manager import AlphabetCallback, EntityCallback, FacultyCallback, GradeCallback
+from managers.button_manager import AlphabetCallback, EntityCallback, FacultyCallback, GradeCallback
 from states import ActionStates, GroupStates, TeacherStates
 
 logger = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ async def back_handler(
     data = await state.get_data()
 
     # Возврат от подтверждения подписки к выбору действия (с группой/учителем)
-    if current_state == ActionStates.waiting_sub_confirm.state:
+    if current_state in (ActionStates.waiting_sub_confirm.state, ActionStates.reading_schedule.state):
         obj_id = data.get("obj_id")
         fake_callback_data = EntityCallback(id=obj_id)
         await entity_handler(callback, fake_callback_data, state)
