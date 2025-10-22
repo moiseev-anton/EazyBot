@@ -1,5 +1,5 @@
 from .account_dto import AccountDTO, AuthDTO, AuthResponseDTO
-from .date_range_dto import DateRangeDTO
+from .date_span_dto import DateSpanDTO
 from .faculty_dto import FacultyDTO
 from .group_dto import GroupDTO
 from .lesson_dto import LessonDTO

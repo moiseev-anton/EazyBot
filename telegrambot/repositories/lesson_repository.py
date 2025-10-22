@@ -4,7 +4,7 @@ from typing import Any
 from jsonapi_client import Filter, Inclusion, Modifier
 from jsonapi_client.document import Document
 
-from dto import DateRangeDTO, GroupDTO, LessonDTO, TeacherDTO
+from dto import DateSpanDTO, GroupDTO, LessonDTO, TeacherDTO
 from dto.base_dto import SubscriptableDTO
 from repositories.base_repository import JsonApiBaseRepository
 from repositories.exceptions import ApiError
@@ -36,11 +36,11 @@ class JsonApiLessonRepository(JsonApiBaseRepository):
         lesson_res = document.resource
         return LessonDTO.from_jsonapi(lesson_res)
 
-    async def get_lessons(self, obj: SubscriptableDTO, date_range: DateRangeDTO, **filters):
+    async def get_lessons(self, obj: SubscriptableDTO, date_span: DateSpanDTO, **filters):
         modifiers = [
             Filter(**{obj.relation_name: obj.id}),
-            Filter(date_from=date_range.from_str),
-            Filter(date_to=date_range.to_str),
+            Filter(date_from=date_span.start_str),
+            Filter(date_to=date_span.end_str),
             Inclusion('teacher', 'group'),
         ]
 
