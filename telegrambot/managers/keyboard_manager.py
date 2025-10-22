@@ -1,153 +1,35 @@
 import logging
-from typing import Dict, Any, List, Optional
+from datetime import date
+from typing import Optional
 
-from aiogram.filters.callback_data import CallbackData
 from aiogram.utils.keyboard import (
     InlineKeyboardBuilder,
-    InlineKeyboardButton,
     InlineKeyboardMarkup,
 )
 from cachetools.func import ttl_cache
 
-from cache import KeyboardDataStore
-from config import settings
-
-from dto import UserDTO, SubscriptionDTO, FacultyDTO, GroupDTO, TeacherDTO
+from dto import DateSpanDTO, FacultyDTO, GroupDTO, SubscriptionDTO, TeacherDTO
 from dto.subscription_dto import SubscriptableDTO
 from enums import EntitySource
+from managers.button_manager import Button, EntityCallback, FacultyCallback, LessonsCallback
 
 logger = logging.getLogger(__name__)
 
 CACHE_TIMEOUT = 86400  # 24 часа
-KEYBOARD_ROW_WIDTH = 4
-TEACHER_KEYBOARD_ROW_WIDTH = 2
-GROUP_KEYBOARD_ROW_WIDTH = 2
-CHAR_KEYBOARD_ROW_WIDTH = 4
-FACULTIES_KEYBOARD_ROW_WIDTH = 1
-
-
-class FacultyCallback(CallbackData, prefix="f"):
-    faculty_id: int
-
-
-class GradeCallback(CallbackData, prefix="grade"):
-    grade: int
-
-
-class GroupCallback(CallbackData, prefix="g"):
-    group_id: int
-
-
-class AlphabetCallback(CallbackData, prefix="a"):
-    letter: str
-
-
-class TeacherCallback(CallbackData, prefix="t"):
-    teacher_id: int
-
-
-class EntityCallback(CallbackData, prefix="e"):
-    id: int
-
-
-class SubscriptionCallback(CallbackData, prefix="sub"):
-    action: str  # subscribe, unsubscribe
-    sub_id: Optional[int] = None
-
-
-class ScheduleCallback(CallbackData, prefix="lessons"):
-    source: str  # context, subscription
-    period: str  # today, tomorrow, ahead, week
-
-
-class Button:
-    _emoji_nums = {
-        "0": "0️⃣",
-        "1": "1️⃣",
-        "2": "2️⃣",
-        "3": "3️⃣",
-        "4": "4️⃣",
-        "5": "5️⃣",
-        "6": "6️⃣",
-        "7": "7️⃣",
-        "8": "8️⃣",
-        "9": "9️⃣",
-    }
-
-    # === Навигация ===
-    home = InlineKeyboardButton(text="🏠 На главную", callback_data="main")
-    back = InlineKeyboardButton(text="◀️ Назад", callback_data="back")
-    confirm = InlineKeyboardButton(text="Продолжить", callback_data="confirm")
-
-    phone = InlineKeyboardButton(text="📞 Поделиться номером", request_contact=True)
-
-    # === Кнопки расписания главного экрана ===
-    today = InlineKeyboardButton(text="🗓Сегодня",
-                                 callback_data=ScheduleCallback(source='subscription', period='today').pack())
-    tomorrow = InlineKeyboardButton(text="🗓Завтра",
-                                    callback_data=ScheduleCallback(source='subscription', period='tomorrow').pack())
-    ahead = InlineKeyboardButton(text="🗓Предстоящее",
-                                 callback_data=ScheduleCallback(source='subscription', period='ahead').pack())
-    week = InlineKeyboardButton(text="🗓Неделя",
-                                callback_data=ScheduleCallback(source='subscription', period='week').pack())
-
-    schedule_menu = [
-        [today, tomorrow],
-        [ahead, week]
-    ]
-
-    # === Кнопки главного экрана ===
-    groups = InlineKeyboardButton(text="🎓Группы", callback_data="faculties")
-    teachers = InlineKeyboardButton(text="👨‍🏫👩‍🏫Преподаватели", callback_data="alphabet")
-    site = InlineKeyboardButton(text="🌍Сайт", url=settings.base_link)
-
-    main_menu = [
-        [groups, teachers],
-        [site],
-    ]
-
-    @classmethod
-    def replace_with_emojis(cls, text: str):
-        """Заменяет все цифры в строке на эмодзи"""
-        return "".join(cls._emoji_nums.get(char, char) for char in text)
-
-    @classmethod
-    def grade(cls, digit: int):
-        """Создаёт кнопку курса с эмодзи."""
-        return InlineKeyboardButton(
-            text=f"\t\t{cls.replace_with_emojis(str(digit))}\t\t",
-            callback_data=GradeCallback(grade=digit).pack(),
-        )
-
-    @classmethod
-    def letter(cls, letter: str) -> InlineKeyboardButton:
-        """Создаёт кнопку курса с эмодзи."""
-        return InlineKeyboardButton(
-            text=f"\t\t{letter}\t\t", callback_data=AlphabetCallback(letter=letter).pack()
-        )
-
-    @classmethod
-    def get_subscription_button(cls, subscription: SubscriptionDTO) -> InlineKeyboardButton:
-        return InlineKeyboardButton(text=f"🗓️ {subscription.display_name}", callback_data="subscription")
+GROUP_KEYBOARD_ROW_WIDTH = 3
+ALPHABET_KEYBOARD_ROW_WIDTH = 5
+FACULTIES_KEYBOARD_ROW_WIDTH = 3
 
 
 class KeyboardManager:
     home = InlineKeyboardMarkup(inline_keyboard=[[Button.home]])
     back_home = InlineKeyboardMarkup(inline_keyboard=[[Button.back, Button.home]])
-    phone_request = InlineKeyboardMarkup(
-        inline_keyboard=[[Button.phone], [Button.home]]
-    )
-    main_base = InlineKeyboardMarkup(inline_keyboard=Button.main_menu)
-    main_with_schedule = InlineKeyboardMarkup(
-        inline_keyboard=(Button.schedule_menu + Button.main_menu)
-    )
+    main_base = InlineKeyboardMarkup(inline_keyboard=[
+        [Button.groups, Button.teachers],
+        [Button.site]
+    ])
 
-    confirm = InlineKeyboardMarkup(
-        inline_keyboard=[[Button.back, Button.confirm]]
-    )
-
-    def __init__(self, cache_store: KeyboardDataStore):
-        self.cache_store = cache_store
+    confirm = InlineKeyboardMarkup(inline_keyboard=[[Button.back, Button.confirm]])
 
     @classmethod
     def get_main_keyboard(cls, user_dto: UserDTO) -> InlineKeyboardMarkup:
@@ -166,7 +48,7 @@ class KeyboardManager:
                 callback_data=FacultyCallback(faculty_id=faculty.id).pack(),
             )
         if faculties:
-            builder.adjust(3)  # до 3 факультетов в строке
+            builder.adjust(FACULTIES_KEYBOARD_ROW_WIDTH)  # до 3 факультетов в строке
         builder.row(Button.home)
         return builder.as_markup()
 
@@ -197,13 +79,13 @@ class KeyboardManager:
             )
 
         if groups:
-            builder.adjust(2)  # до 2 групп в строке
+            builder.adjust(GROUP_KEYBOARD_ROW_WIDTH)  # до 2 групп в строке
 
         builder.row(Button.back, Button.home)
         return builder.as_markup()
 
     @staticmethod
-    @ttl_cache(maxsize=1, ttl=60 * 30)
+    @ttl_cache(maxsize=1, ttl=60 * 20)
     def get_alphabet_keyboard(letters: tuple[str, ...]) -> InlineKeyboardMarkup:
         """Собирает клавиатуру с буквами алфавита из teachers_cache."""
         builder = InlineKeyboardBuilder()
@@ -212,7 +94,7 @@ class KeyboardManager:
             builder.add(Button.letter(letter))
 
         if letters:
-            builder.adjust(5)  # 5 букв в строке
+            builder.adjust(ALPHABET_KEYBOARD_ROW_WIDTH)  # 5 букв в строке
         builder.row(Button.home)
         return builder.as_markup()
 
@@ -228,11 +110,10 @@ class KeyboardManager:
                 callback_data=EntityCallback(id=teacher.id).pack(),
             )
 
-        if teachers:
-            if len(teachers) > 10:
-                builder.adjust(2)
-            else:
-                builder.adjust(1)  # 1 учитель в строке
+        # TODO: Такое вычисление количества кнопок в строке потенциально опасное
+        #  Элементов в teachers в теории может оказаться слишком много.
+        row_width = len(teachers) // 10 + 1
+        builder.adjust(row_width)
         builder.row(Button.back, Button.home)
         return builder.as_markup()
 
