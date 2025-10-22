@@ -1,4 +1,5 @@
 from .entity_handler import router as entity_router
+from .error_handler import router as error_router
 from .group_handlers import router as faculty_router
 from .lessons_handlers import router as lessons_router
 from .main_handler import router as main_router
