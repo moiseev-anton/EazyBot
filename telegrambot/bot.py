@@ -12,6 +12,7 @@ from config import settings
 from dependencies import Deps
 from handlers import (
     entity_router,
+    error_router,
     start_router,
     main_router,
     faculty_router,
@@ -63,6 +64,7 @@ async def main():
         subscription_router,
         teacher_router,
         lessons_router,
+        error_router,
     )
     dp.startup.register(on_startup)
     dp.shutdown.register(on_shutdown)

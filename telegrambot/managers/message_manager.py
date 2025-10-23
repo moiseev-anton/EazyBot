@@ -145,7 +145,8 @@ class MessageManager:
     )
 
     # === OШИБКИ ===
-    ERROR_DEFAULT = "⚠ Что-то пошло не так, попробуйте снова."
+    ERROR_DEFAULT = "⚠ Упс, что-то пошло не так. Попробуйте вернуться на главную или перезапустить бот."
+    STATE_DATA_EXPIRED = "😅 Упс, кажется, данные устарели. Давайте начнём сначала!"
 
     @classmethod
     def get_start_message(
@@ -174,7 +175,7 @@ class MessageManager:
     def get_main_message(user: UserDTO) -> str:
         lines = [
             f"👤 <b>{f"{user.first_name} {user.last_name}"}</b>",
-            f"🔹 <i>{user.username}</i>\n",
+            f"🪪 <i>{user.username}</i>\n",
             "Расписание:"
         ]
         if user.subscriptions:
