@@ -53,7 +53,7 @@ async def lessons_handler(
 
 @router.callback_query(LessonsCallback.filter(F.source == EntitySource.CONTEXT))
 @inject
-async def lessons_handler(
+async def context_lessons_handler(
         callback: types.CallbackQuery,
         callback_data: LessonsCallback,
         state: FSMContext,
@@ -76,12 +76,19 @@ async def lessons_handler(
             raise ValueError(f"Unknown navigation branch: {branch}")
 
     mode = ScheduleMode(callback_data.mode)
-    date_span = mode.get_span(shift=callback_data.shift)
+    shift = callback_data.shift
+    date_span = mode.get_span(shift=shift)
     lessons = await lesson_service.get_lessons(target_object, date_span)
+    new_text = MessageManager.format_schedule(target_object, lessons, date_span)
 
+    if new_text == callback.message.html_text:
+        await callback.answer("💫 Обновлено")
+        return
+
+    prev_page, next_page = mode.get_page_range(shift=shift)
     await callback.message.edit_text(
         text=MessageManager.format_schedule(target_object, lessons, date_span),
-        reply_markup=KeyboardManager.back_home,
+        reply_markup=KeyboardManager.get_schedule_keyboard(callback_data, prev_page, next_page),
     )
     await state.set_state(ActionStates.reading_schedule)
     await callback.answer()

@@ -183,5 +183,10 @@ class KeyboardManager:
             )
 
         builder.adjust(3)
-        builder.row(Button.back_home)
+
+        if source == EntitySource.SUBSCRIPTION:
+            builder.row(Button.back_home)
+        else:
+            builder.row(Button.back, Button.home)
+
         return builder.as_markup()
