@@ -7,7 +7,7 @@ from dependency_injector.wiring import inject, Provide
 from dependencies import Deps
 from dto import DateSpanDTO
 from dto.base_dto import SubscriptableDTO
-from enums import Branch, EntitySource, ScheduleMode
+from enums import Branch, EntitySource, ModeEnum
 from fsm_utils import get_state_data
 from managers import KeyboardManager, MessageManager
 from managers.button_manager import LessonsCallback
@@ -73,7 +73,7 @@ async def lessons_handler(
         case _:
             raise ValueError(f"Unknown navigation branch: {branch}")
 
-    schedule_mode = ScheduleMode(callback_data.mode)
+    schedule_mode = ModeEnum(callback_data.mode)
     date_span = DateSpanDTO.from_mode(schedule_mode, callback_data.shift)
 
     lessons = await lesson_service.get_lessons(target_object, date_span)

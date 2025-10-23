@@ -24,7 +24,7 @@ class Branch(StrEnum):
     TEACHERS = "teachers"
 
 
-class ScheduleMode(StrEnum):
+class ModeEnum(StrEnum):
     ONE_DAY = "1day"
     THREE_DAYS = "3days"
     WEEK = "week"

@@ -6,7 +6,7 @@ from aiogram.filters.callback_data import CallbackData
 from aiogram.utils.keyboard import InlineKeyboardButton
 
 from config import settings
-from enums import NavigationAction, ScheduleMode, SubscriptionAction
+from enums import NavigationAction, ModeEnum, SubscriptionAction
 
 logger = logging.getLogger(__name__)
 
@@ -81,21 +81,21 @@ class Button:
             [
                 InlineKeyboardButton(
                     text="🗓 Сегодня",
-                    callback_data=LessonsCallback(source=source, mode=ScheduleMode.ONE_DAY).pack(),
+                    callback_data=LessonsCallback(source=source, mode=ModeEnum.ONE_DAY).pack(),
                 ),
                 InlineKeyboardButton(
                     text="🗓 Завтра",
-                    callback_data=LessonsCallback(source=source, mode=ScheduleMode.ONE_DAY, shift=1).pack(),
+                    callback_data=LessonsCallback(source=source, mode=ModeEnum.ONE_DAY, shift=1).pack(),
                 ),
             ],
             [
                 InlineKeyboardButton(
                     text="🗓 На 3 дня",
-                    callback_data=LessonsCallback(source=source, mode=ScheduleMode.THREE_DAYS).pack(),
+                    callback_data=LessonsCallback(source=source, mode=ModeEnum.THREE_DAYS).pack(),
                 ),
                 InlineKeyboardButton(
                     text="🗓 Неделя",
-                    callback_data=LessonsCallback(source=source, mode=ScheduleMode.WEEK).pack(),
+                    callback_data=LessonsCallback(source=source, mode=ModeEnum.WEEK).pack(),
                 ),
             ],
         ]

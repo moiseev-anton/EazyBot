@@ -3,21 +3,21 @@ from typing import Union
 
 from pydantic import BaseModel, field_validator, model_validator
 
-from enums import ScheduleMode
+from enums import ModeEnum
 
 # Режимы отображения расписания
 # Конфигурируют количество дней для отображения
 # и функцию вычисления первого дня относительно сегодняшнего.
 MODES = {
-    ScheduleMode.ONE_DAY: {
+    ModeEnum.ONE_DAY: {
         "days": 1,
         "start_func": lambda today: today,  # просто сегодняшний день
     },
-    ScheduleMode.THREE_DAYS: {
+    ModeEnum.THREE_DAYS: {
         "days": 3,
         "start_func": lambda today: today,  # начинается с сегодняшнего
     },
-    ScheduleMode.WEEK: {
+    ModeEnum.WEEK: {
         "days": 7,
         "start_func": lambda today: today - timedelta(days=today.weekday()),  # понедельник
     },
