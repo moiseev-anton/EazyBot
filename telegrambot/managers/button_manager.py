@@ -54,6 +54,7 @@ class Button:
 
     # === Навигация ===
     home = InlineKeyboardButton(text="🏠 На главную", callback_data=NavigationAction.MAIN)
+    back_home = InlineKeyboardButton(text="◀️ Назад", callback_data=NavigationAction.MAIN)
     back = InlineKeyboardButton(text="◀️ Назад", callback_data=NavigationAction.BACK)
     confirm = InlineKeyboardButton(text="Продолжить 🆗", callback_data=NavigationAction.CONFIRM)
 

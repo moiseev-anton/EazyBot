@@ -63,7 +63,7 @@ class KeyboardManager:
             )
         if faculties:
             builder.adjust(FACULTIES_KEYBOARD_ROW_WIDTH)  # до 3 факультетов в строке
-        builder.row(Button.home)
+        builder.row(Button.back_home, Button.home)
         return builder.as_markup()
 
     @staticmethod
@@ -109,7 +109,7 @@ class KeyboardManager:
 
         if letters:
             builder.adjust(ALPHABET_KEYBOARD_ROW_WIDTH)  # 5 букв в строке
-        builder.row(Button.home)
+        builder.row(Button.back_home, Button.home)
         return builder.as_markup()
 
     @staticmethod
@@ -183,5 +183,5 @@ class KeyboardManager:
             )
 
         builder.adjust(3)
-        builder.row(Button.home)
+        builder.row(Button.back_home)
         return builder.as_markup()
