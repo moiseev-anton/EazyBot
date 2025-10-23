@@ -6,7 +6,7 @@ from dependency_injector.wiring import inject, Provide
 
 from dependencies import Deps
 from enums import Branch
-from fsm_utils import get_state_data
+from states import get_state_data
 from managers import KeyboardManager, MessageManager
 from managers.button_manager import EntityCallback
 from services import GroupService, SubscriptionService, TeacherService

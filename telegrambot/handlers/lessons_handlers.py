@@ -7,7 +7,7 @@ from dependency_injector.wiring import inject, Provide
 from dependencies import Deps
 from dto.base_dto import SubscriptableDTO
 from enums import Branch, EntitySource
-from fsm_utils import get_state_data
+from states import get_state_data
 from managers import KeyboardManager, MessageManager
 from managers.button_manager import LessonsCallback
 from schedule_view_modes import ScheduleMode
