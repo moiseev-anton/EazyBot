@@ -5,12 +5,12 @@ from aiogram.fsm.context import FSMContext
 from dependency_injector.wiring import inject, Provide
 
 from dependencies import Deps
-from dto import DateSpanDTO
 from dto.base_dto import SubscriptableDTO
-from enums import Branch, EntitySource, ModeEnum
+from enums import Branch, EntitySource
 from fsm_utils import get_state_data
 from managers import KeyboardManager, MessageManager
 from managers.button_manager import LessonsCallback
+from schedule_view_modes import ScheduleMode
 from services import GroupService, LessonService, SubscriptionService, TeacherService
 from states import ActionStates
 
@@ -27,14 +27,15 @@ async def lessons_handler(
         lesson_service: LessonService = Provide[Deps.services.lesson],
         subscription_service: SubscriptionService = Provide[Deps.services.subscription]
 ):
-    mode, shift = callback_data.mode, callback_data.shift
-
     subs = await subscription_service.get_user_subscriptions()
     if not subs:
         raise Exception('No subscriptions found')
 
+    mode = ScheduleMode(callback_data.mode)
+    shift = callback_data.shift
+    date_span = mode.get_span(shift=shift)
+
     target_object: SubscriptableDTO = subs[0].object
-    date_span = DateSpanDTO.from_mode(mode, shift)
     lessons = await lesson_service.get_lessons(target_object, date_span)
     new_text = MessageManager.format_schedule(target_object, lessons, date_span)
 
@@ -42,9 +43,10 @@ async def lessons_handler(
         await callback.answer("💫 Обновлено")
         return
 
+    prev_page, next_page = mode.get_page_range(shift=shift)
     await callback.message.edit_text(
         text=new_text,
-        reply_markup=KeyboardManager.get_schedule_keyboard(callback_data, date_span),
+        reply_markup=KeyboardManager.get_schedule_keyboard(callback_data, prev_page, next_page),
     )
     await callback.answer()
 
@@ -73,9 +75,8 @@ async def lessons_handler(
         case _:
             raise ValueError(f"Unknown navigation branch: {branch}")
 
-    schedule_mode = ModeEnum(callback_data.mode)
-    date_span = DateSpanDTO.from_mode(schedule_mode, callback_data.shift)
-
+    mode = ScheduleMode(callback_data.mode)
+    date_span = mode.get_span(shift=callback_data.shift)
     lessons = await lesson_service.get_lessons(target_object, date_span)
 
     await callback.message.edit_text(

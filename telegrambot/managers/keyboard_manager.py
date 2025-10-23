@@ -1,5 +1,4 @@
 import logging
-from datetime import date
 from typing import Optional
 
 from aiogram.utils.keyboard import (
@@ -8,7 +7,7 @@ from aiogram.utils.keyboard import (
 )
 from cachetools.func import ttl_cache
 
-from dto import DateSpanDTO, FacultyDTO, GroupDTO, SubscriptionDTO, TeacherDTO
+from dto import FacultyDTO, GroupDTO, SubscriptionDTO, TeacherDTO
 from dto.subscription_dto import SubscriptableDTO
 from enums import EntitySource
 from managers.button_manager import Button, EntityCallback, FacultyCallback, LessonsCallback
@@ -159,29 +158,28 @@ class KeyboardManager:
     def get_schedule_keyboard(
             cls,
             callback_data: LessonsCallback,
-            date_span: DateSpanDTO,
+            prev_page: int | None,
+            next_page: int | None,
     ) -> InlineKeyboardMarkup:
         """Собирает клавиатуру действий для выбранного объекта (группы или учителя)"""
-        mode, shift, source = callback_data.mode, callback_data.shift, callback_data.source
-        today = date.today()
-
         builder = InlineKeyboardBuilder()
+        source, mode, shift = callback_data.source, callback_data.mode, callback_data.shift
 
-        if (today - date_span.end).days <= 180:
+        if prev_page is not None:
             builder.button(
                 text="◀️",
-                callback_data=LessonsCallback(source=source, mode=mode, shift=shift - 1).pack(),
+                callback_data=LessonsCallback(source=source, mode=mode, shift=prev_page).pack(),
             )
 
         builder.button(
-            text="🔄 Обновить" if date_span.start <= today <= date_span.end else "🔄 Сегодня",
+            text="🔄 Обновить" if shift == 0 else "🔄 Сегодня",
             callback_data=LessonsCallback(source=source, mode=mode).pack(),
         )
 
-        if (date_span.end - today).days <= 4:
+        if next_page is not None:
             builder.button(
                 text="▶️",
-                callback_data=LessonsCallback(source=source, mode=mode, shift=shift + 1).pack()
+                callback_data=LessonsCallback(source=source, mode=mode, shift=next_page).pack()
             )
 
         builder.adjust(3)

@@ -1,27 +1,7 @@
-from datetime import date, timedelta
+from datetime import date
 from typing import Union
 
 from pydantic import BaseModel, field_validator, model_validator
-
-from enums import ModeEnum
-
-# Режимы отображения расписания
-# Конфигурируют количество дней для отображения
-# и функцию вычисления первого дня относительно сегодняшнего.
-MODES = {
-    ModeEnum.ONE_DAY: {
-        "days": 1,
-        "start_func": lambda today: today,  # просто сегодняшний день
-    },
-    ModeEnum.THREE_DAYS: {
-        "days": 3,
-        "start_func": lambda today: today,  # начинается с сегодняшнего
-    },
-    ModeEnum.WEEK: {
-        "days": 7,
-        "start_func": lambda today: today - timedelta(days=today.weekday()),  # понедельник
-    },
-}
 
 
 class DateSpanDTO(BaseModel):
@@ -55,10 +35,3 @@ class DateSpanDTO(BaseModel):
         if self.start > self.end:
             raise ValueError("date_from cannot be later than date_to.")
         return self
-
-    @classmethod
-    def from_mode(cls, mode: str, shift: int = 0) -> "DateSpanDTO":
-        config = MODES[mode]
-        start = config["start_func"](date.today()) + timedelta(days=shift * config["days"])
-        end = start + timedelta(days=config["days"] - 1)
-        return cls(start=start, end=end)
