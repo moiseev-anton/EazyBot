@@ -1,5 +1,6 @@
 # @formatter:off
 #  Monkey-патч для jsonapi_client
+from aiogram.types import BotCommand, BotCommandScopeDefault
 from api_client.client_patch import patch_jsonapi_client
 patch_jsonapi_client(verbose=True)
 
@@ -24,18 +25,21 @@ from handlers import (
 from middleware import UserContextMiddleware
 from tasks import setup_periodic_task_scheduler
 
-from aiogram import Dispatcher
+from aiogram import Bot, Dispatcher
 
 logging.basicConfig(level=getattr(logging, settings.log_level), stream=sys.stdout)
 logger = logging.getLogger(__name__)
 
 
-# Хуки запуска и остановки
-async def on_startup(deps: Deps):
-    deps.api_client()  # Создаем API-client, который устанавливает соединение с сервером
-    await deps.services.teacher().refresh()  # Первичное получение учителей для клавиатур
-    await deps.services.group().refresh()  # Первичное получение групп для клавиатур
+async def on_startup(deps: Deps, bot: Bot):
+    deps.api_client()                               # Создаем API-client
+    await deps.services.teacher().refresh()         # Первичное получение учителей для клавиатур
+    await deps.services.group().refresh()           # Первичное получение групп для клавиатур
     await setup_periodic_task_scheduler(deps=deps)  # Запуск планировщика
+
+    # Добавление Меню команд
+    commands = [BotCommand(command="start", description="🚀 Перезапуск бота")]
+    await bot.set_my_commands(commands, scope=BotCommandScopeDefault())
     logger.info("Bot started.")
 
 
