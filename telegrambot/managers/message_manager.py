@@ -57,6 +57,9 @@ class ScheduleMessageBuilder:
         6: "ВОСКРЕСЕНЬЕ"
     }
 
+    # Порог общего количества занятий, при превышении которого делаем сообщение сворачиваемым
+    _EXPANDABLE_THRESHOLD = 10
+
     @classmethod
     def build_schedule(
             cls,
@@ -72,6 +75,10 @@ class ScheduleMessageBuilder:
 
         lines = [f"🗓️ <b>{title}</b>", ""]
 
+        # Определяем, стоит ли сворачивать блоки уроков <blockquote expandable> или <blockquote>
+        is_expandable = len(lessons) > cls._EXPANDABLE_THRESHOLD
+        blockquote_attr = " expandable" if is_expandable else ""
+
         for current_date in cls._iter_dates(date_range):
             lines.append(cls._format_date(current_date))
             day_lessons = grouped.get(current_date.isoformat())
@@ -80,7 +87,7 @@ class ScheduleMessageBuilder:
                 continue
 
             formatted_lessons = [formatter(lesson) for lesson in sorted(day_lessons, key=lambda l: l.number)]
-            lines.append(f"<blockquote>{'\n\n'.join(formatted_lessons)}</blockquote>\n")
+            lines.append(f"<blockquote{blockquote_attr}>{'\n\n'.join(formatted_lessons)}</blockquote>\n")
 
         return "\n".join(lines).strip()
 
