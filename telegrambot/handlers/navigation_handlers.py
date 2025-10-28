@@ -96,3 +96,8 @@ async def confirm_handler(callback: types.CallbackQuery, state: FSMContext):
             await main_handler(callback, state)
             # await handle_error(callback, state)
             return
+
+
+@router.callback_query(F.data == NavigationAction.DELETE)
+async def delete_handler(callback: types.CallbackQuery):
+    await callback.message.delete()

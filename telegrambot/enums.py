@@ -14,6 +14,8 @@ class SubscriptionAction(StrEnum):
 class NavigationAction(StrEnum):
     MAIN = "main"  # Главное меню
     BACK = "back"  # Назад
+    DELETE = "delete"
+    FORWARD = "forward"
     CONFIRM = "confirm"  # Подтвердить действие
     FACULTIES = "faculties"  # Список факультетов
     ALPHABET = "alphabet"  # Выбор по алфавиту
