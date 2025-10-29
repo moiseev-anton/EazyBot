@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 class AuthDTO(BaseModel):
     platform: str = settings.platform
     social_id: str
+    chat_id: str
     first_name: str = "Anonymous"
     last_name: str
     extra_data: Dict[str, Any] = {}
@@ -27,9 +28,10 @@ class AuthDTO(BaseModel):
         return value
 
     @classmethod
-    def from_telegram(cls, tlg_user: "TelegramUser") -> "AuthDTO":
+    def from_telegram(cls, tlg_user: "TelegramUser", chat_id) -> "AuthDTO":
         return cls(
             social_id=str(tlg_user.id),
+            chat_id=str(chat_id),
             first_name=tlg_user.first_name,
             last_name=tlg_user.last_name or "",
             extra_data={
@@ -45,6 +47,7 @@ class AccountDTO(BaseModel):
     id: int
     platform: str
     social_id: str
+    chat_id: str
     extra_data: Dict[str, Any] = {}
     user_id: str
     user: Optional["UserDTO"] = None
@@ -64,6 +67,7 @@ class AccountDTO(BaseModel):
             id=int(acc.id),
             platform=acc.platform,
             social_id=acc.social_id,
+            chat_id=acc.chat_id,
             extra_data=acc.extra_data,
             user_id=str(acc.user._resource_identifier.id),
             user=user

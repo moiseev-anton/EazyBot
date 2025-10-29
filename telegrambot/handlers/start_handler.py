@@ -26,7 +26,8 @@ async def start_handler(
     await state.clear()
     # Собираем данные пользователя из Telegram
     tlg_user = message.from_user
-    auth_dto = AuthDTO.from_telegram(tlg_user)
+    chat_id = message.chat.id
+    auth_dto = AuthDTO.from_telegram(tlg_user, chat_id)
     auth_dto.nonce = command.args
 
     try:

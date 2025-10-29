@@ -1,6 +1,7 @@
 models_as_jsonschema = {
     'social-accounts': {'properties': {
         'socialId': {'type': 'string'},
+        'chatId': {'type': 'string'},
         'platform': {'type': 'string'},
         'firstName': {'type': ['string', 'null']},
         'lastName': {'type': ['string', 'null']},
