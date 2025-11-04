@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, ErrorEvent, Message
 
 from exceptions import StateExpiredError
-from handlers.main_handler import main_handler
+from handlers.main_handler import main_callback_handler
 from managers import KeyboardManager, MessageManager
 
 logger = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ async def state_expired_callback_handler(event: ErrorEvent, callback: CallbackQu
         text=MessageManager.STATE_DATA_EXPIRED,
         show_alert=True,  # Показывает как popup
     )
-    await main_handler(callback, state)
+    await main_callback_handler(callback, state)
 
 
 @router.error(ExceptionTypeFilter(StateExpiredError), F.update.message.as_("message"))

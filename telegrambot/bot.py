@@ -38,7 +38,10 @@ async def on_startup(deps: Deps, bot: Bot):
     await setup_periodic_task_scheduler(deps=deps)  # Запуск планировщика
 
     # Добавление Меню команд
-    commands = [BotCommand(command="start", description="🚀 Перезапуск бота")]
+    commands = [
+        BotCommand(command="start", description="🚀 Перезапуск бота"),
+        BotCommand(command="main", description="🏠 На главную"),
+                ]
     await bot.set_my_commands(commands, scope=BotCommandScopeDefault())
     logger.info("Bot started.")
 

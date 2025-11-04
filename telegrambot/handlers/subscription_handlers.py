@@ -8,7 +8,7 @@ from dependencies import Deps
 from enums import Branch, SubscriptionAction
 from states import get_state_data
 from handlers.entity_handler import entity_handler
-from handlers.main_handler import main_handler
+from handlers.main_handler import main_callback_handler
 from managers import KeyboardManager, MessageManager
 from managers.button_manager import EntityCallback, SubscriptionCallback
 from services import GroupService, SubscriptionService, TeacherService
@@ -60,7 +60,7 @@ async def create_subscription_handler(
     new_sub = await subscription_service.subscribe(obj)
 
     await callback.answer("Подписка создана!👌")
-    await main_handler(callback, state)
+    await main_callback_handler(callback, state)
     return
 
 
@@ -82,4 +82,4 @@ async def unsubscribe_handler(
         fake_callback_data = EntityCallback(id=data["obj_id"])
         await entity_handler(callback, fake_callback_data, state)
     else:
-        await main_handler(callback, state)
+        await main_callback_handler(callback, state)
