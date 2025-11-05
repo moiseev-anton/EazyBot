@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from enums import Branch, NavigationAction
 from handlers.entity_handler import entity_handler
 from handlers.group_handlers import course_groups_handler, faculties_handler, faculty_grades_handler
-from handlers.main_handler import main_handler
+from handlers.main_handler import main_callback_handler
 from handlers.subscription_handlers import create_subscription_handler
 from handlers.teacher_handlers import alphabet_handler, teachers_bucket_handler
 from managers.button_manager import AlphabetCallback, EntityCallback, FacultyCallback, GradeCallback
@@ -48,7 +48,7 @@ async def back_handler(
                     return
 
                 case _:
-                    await main_handler(callback, state)
+                    await main_callback_handler(callback, state)
                     return
                     # await handle_error(callback, state)
 
@@ -74,12 +74,12 @@ async def back_handler(
                     return
 
                 case _:
-                    await main_handler(callback, state)
+                    await main_callback_handler(callback, state)
                     # await handle_error(callback, state)
                     return
 
         case _:
-            await main_handler(callback, state)
+            await main_callback_handler(callback, state)
             # await handle_error(callback, state)
             return
 
@@ -93,7 +93,7 @@ async def confirm_handler(callback: types.CallbackQuery, state: FSMContext):
             await create_subscription_handler(callback, state)
 
         case _:
-            await main_handler(callback, state)
+            await main_callback_handler(callback, state)
             # await handle_error(callback, state)
             return
 

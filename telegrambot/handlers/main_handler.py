@@ -43,7 +43,7 @@ async def main_callback_handler(
 
 
 @router.message(Command(NavigationAction.MAIN))
-async def main_callback_handler(
+async def main_command_handler(
         message: types.Message,
         state: FSMContext,
 ):
