@@ -1,7 +1,7 @@
 from typing import Optional
 
-from pydantic import BaseModel
-
+from pydantic import BaseModel, field_validator
+from datetime import time
 from dto.group_dto import GroupDTO
 from dto.teacher_dto import TeacherDTO
 
@@ -10,8 +10,8 @@ class LessonDTO(BaseModel):
     id: int
     number: int
     date: str
-    startTime: str
-    endTime: str
+    startTime: Optional[time]
+    endTime: Optional[time]
     subject: str
     classroom: str
     subgroup: str
@@ -27,6 +27,12 @@ class LessonDTO(BaseModel):
     @property
     def resource_type(self) -> int:
         return self.Config._resource_type
+
+    @field_validator("startTime", "endTime", mode="before")
+    def parse_time(cls, value):
+        if value is None:
+            return None
+        return time.fromisoformat(value)
 
     @classmethod
     def from_jsonapi(

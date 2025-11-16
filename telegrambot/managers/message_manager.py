@@ -1,5 +1,5 @@
 import logging
-from datetime import date, timedelta
+from datetime import date, time, timedelta
 from typing import Callable, Optional
 
 from dto import DateSpanDTO, FacultyDTO, GroupDTO, LessonDTO, SubscriptionDTO, TeacherDTO, UserDTO
@@ -13,17 +13,16 @@ class LessonFormatter:
     """Форматирует отдельный урок в текст"""
 
     @staticmethod
-    def emoji_for_number(number: int) -> str:
-        mapping = {
-            1: "1️⃣", 2: "2️⃣", 3: "3️⃣", 4: "4️⃣",
-            5: "5️⃣", 6: "6️⃣", 7: "7️⃣", 8: "8️⃣"
-        }
-        return mapping.get(number, str(number))
+    def format_time(value: Optional[time]) -> str:
+        return value.strftime("%H:%M") if value else "--:--"
 
     @classmethod
     def format_for_group(cls, lesson: LessonDTO) -> str:
+        number_emoji = replace_digits_to_emojis(lesson.number)
+        start = cls.format_time(lesson.startTime)
+
         lines = [
-            f"{replace_digits_to_emojis(lesson.number)}  <b>{lesson.startTime[:5]}</b>   📍{lesson.classroom or '-'}",
+            f"{number_emoji}  <b>{start}</b>   📍{lesson.classroom or '-'}",
             f"<b>{lesson.subject}</b>",
             (f"{lesson.subgroup} подгруппа" if lesson.subgroup and lesson.subgroup != "0" else None),
             f"<i>{lesson.teacher.short_name}</i>" if lesson.teacher else None,
@@ -32,8 +31,11 @@ class LessonFormatter:
 
     @classmethod
     def format_for_teacher(cls, lesson: LessonDTO) -> str:
+        number_emoji = replace_digits_to_emojis(lesson.number)
+        start = cls.format_time(lesson.startTime)
+
         lines = [
-            f"{replace_digits_to_emojis(lesson.number)}  <b>{lesson.startTime[:5]}</b>   📍{lesson.classroom or '-'}",
+            f"{number_emoji}  <b>{start}</b>   📍{lesson.classroom or '-'}",
             f"<b>{lesson.subject}</b>",
             (f"{lesson.subgroup} подгруппа" if lesson.subgroup and lesson.subgroup != "0" else None),
             f"<i>{lesson.group.title}</i>" if lesson.group else None,
