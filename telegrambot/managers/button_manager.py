@@ -7,6 +7,7 @@ from aiogram.utils.keyboard import InlineKeyboardButton
 
 from config import settings
 from enums import NavigationAction, ModeEnum, SubscriptionAction
+from managers.utills import replace_digits_to_emojis
 
 logger = logging.getLogger(__name__)
 
@@ -39,18 +40,6 @@ class LessonsCallback(CallbackData, prefix="les"):
 
 
 class Button:
-    _emoji_nums = {
-        "0": "0️⃣",
-        "1": "1️⃣",
-        "2": "2️⃣",
-        "3": "3️⃣",
-        "4": "4️⃣",
-        "5": "5️⃣",
-        "6": "6️⃣",
-        "7": "7️⃣",
-        "8": "8️⃣",
-        "9": "9️⃣",
-    }
 
     # === Навигация ===
     home = InlineKeyboardButton(text="🏠 На главную", callback_data=NavigationAction.MAIN)
@@ -102,16 +91,11 @@ class Button:
         ]
 
     @classmethod
-    def replace_with_emojis(cls, text: str):
-        """Заменяет все цифры в строке на эмодзи"""
-        return "".join(cls._emoji_nums.get(char, char) for char in text)
-
-    @classmethod
     @lru_cache(maxsize=10)
     def grade(cls, digit: int):
         """Создаёт кнопку курса с эмодзи."""
         return InlineKeyboardButton(
-            text=f"\t\t{cls.replace_with_emojis(str(digit))}\t\t",
+            text=f"\t\t{replace_digits_to_emojis(digit)}\t\t",
             callback_data=GradeCallback(grade=digit).pack(),
         )
 

@@ -4,6 +4,7 @@ from typing import Callable, Optional
 
 from dto import DateSpanDTO, FacultyDTO, GroupDTO, LessonDTO, SubscriptionDTO, TeacherDTO, UserDTO
 from dto.base_dto import SubscriptableDTO
+from managers.utills import replace_digits_to_emojis
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +23,7 @@ class LessonFormatter:
     @classmethod
     def format_for_group(cls, lesson: LessonDTO) -> str:
         lines = [
-            f"{cls.emoji_for_number(lesson.number)}  <b>{lesson.startTime[:5]}</b>   📍{lesson.classroom or '-'}",
+            f"{replace_digits_to_emojis(lesson.number)}  <b>{lesson.startTime[:5]}</b>   📍{lesson.classroom or '-'}",
             f"<b>{lesson.subject}</b>",
             (f"{lesson.subgroup} подгруппа" if lesson.subgroup and lesson.subgroup != "0" else None),
             f"<i>{lesson.teacher.short_name}</i>" if lesson.teacher else None,
@@ -32,7 +33,7 @@ class LessonFormatter:
     @classmethod
     def format_for_teacher(cls, lesson: LessonDTO) -> str:
         lines = [
-            f"{cls.emoji_for_number(lesson.number)}  <b>{lesson.startTime[:5]}</b>   📍{lesson.classroom or '-'}",
+            f"{replace_digits_to_emojis(lesson.number)}  <b>{lesson.startTime[:5]}</b>   📍{lesson.classroom or '-'}",
             f"<b>{lesson.subject}</b>",
             (f"{lesson.subgroup} подгруппа" if lesson.subgroup and lesson.subgroup != "0" else None),
             f"<i>{lesson.group.title}</i>" if lesson.group else None,
