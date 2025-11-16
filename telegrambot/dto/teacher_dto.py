@@ -7,7 +7,7 @@ class TeacherDTO(SubscriptableDTO):
     id: int
     full_name: str
     short_name: str
-    link: Optional[str] = None
+    endpoint: Optional[str] = None
 
     class Config:
         frozen = True
@@ -30,5 +30,5 @@ class TeacherDTO(SubscriptableDTO):
             id=int(t.id),
             full_name=t.full_name,
             short_name=t.short_name,
-            link=getattr(t, "link", None),
+            endpoint=getattr(t, "endpoint", None),
         )

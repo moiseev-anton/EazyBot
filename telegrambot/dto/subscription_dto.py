@@ -31,8 +31,8 @@ class SubscriptionDTO(BaseModel):
         return self.object.button_name
 
     @property
-    def link(self):
-        return self.object.link
+    def endpoint(self):
+        return self.object.endpoint
 
     @classmethod
     def from_jsonapi(cls, sub: 'ResourceObject', object: SubscriptableDTO) -> "SubscriptionDTO":

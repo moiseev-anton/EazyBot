@@ -147,8 +147,8 @@ class KeyboardManager:
         else:
             builder.add(Button.subscribe)
 
-        if obj.link is not None:
-            builder.add(Button.page_link(obj.link))
+        if obj.endpoint is not None:
+            builder.add(Button.page_link(obj.endpoint))
 
         builder.adjust(2, 2, 1)
         builder.row(Button.back, Button.home)

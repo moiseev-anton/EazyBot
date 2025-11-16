@@ -20,7 +20,7 @@ async def build_main_menu_content(
     if user.subscriptions:
         first_subscription = user.subscriptions[0]
         sub_id = first_subscription.id
-        endpoint = first_subscription.link
+        endpoint = first_subscription.endpoint
 
     text = MessageManager.get_main_message(user)
     reply_markup = KeyboardManager.get_main_keyboard(sub_id, endpoint)
