@@ -94,18 +94,18 @@ class Button:
             ],
         ]
 
-    @classmethod
+    @staticmethod
     @lru_cache(maxsize=10)
-    def grade(cls, digit: int):
+    def grade(digit: int):
         """Создаёт кнопку курса с эмодзи."""
         return InlineKeyboardButton(
             text=f"\t\t{replace_digits_to_emojis(digit)}\t\t",
             callback_data=GradeCallback(grade=digit).pack(),
         )
 
-    @classmethod
+    @staticmethod
     @lru_cache(maxsize=36)
-    def letter(cls, letter: str) -> InlineKeyboardButton:
+    def letter(letter: str) -> InlineKeyboardButton:
         """Создаёт кнопку курса с эмодзи."""
         return InlineKeyboardButton(
             text=f"\t\t{letter}\t\t", callback_data=AlphabetCallback(letter=letter).pack()
