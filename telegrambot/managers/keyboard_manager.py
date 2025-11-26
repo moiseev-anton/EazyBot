@@ -7,10 +7,11 @@ from aiogram.utils.keyboard import (
 )
 from cachetools.func import ttl_cache
 
-from dto import FacultyDTO, GroupDTO, SubscriptionDTO, TeacherDTO
+from dto import FacultyDTO, GroupDTO, SubscriptionDTO, TeacherDTO, UserDTO
 from dto.subscription_dto import SubscriptableDTO
-from enums import EntitySource
-from managers.button_manager import Button, EntityCallback, FacultyCallback, LessonsCallback
+from enums import EntitySource, SubscriptionAction, ToggleEnum
+from managers.button_manager import Button, EntityCallback, FacultyCallback, LessonsCallback, SubscriptionCallback, \
+    ToggleCallback
 
 logger = logging.getLogger(__name__)
 
@@ -41,8 +42,8 @@ class KeyboardManager:
         for row in Button.schedule_menu(source=EntitySource.SUBSCRIPTION):
             builder.row(*row)
 
-        builder.row(Button.unsubscribe(subscription_id))
         builder.row(Button.groups, Button.teachers)
+        builder.row(Button.user_settings)
 
         if endpoint is not None:
             builder.row(Button.page_link(endpoint))
@@ -50,6 +51,44 @@ class KeyboardManager:
             builder.row(Button.site)
 
         return builder.as_markup()
+
+    @staticmethod
+    def _notify_toggle(title: str, flag_name: str, enabled: bool):
+        rb = "🔔" if enabled else "🔕"
+        return dict(
+            text=f"{rb} {title}",
+            callback_data=ToggleCallback(flag_name=flag_name).pack()
+        )
+
+    @classmethod
+    def get_settings_keyboard(cls, user: UserDTO) -> InlineKeyboardMarkup:
+        builder = InlineKeyboardBuilder()
+        builder.button(
+            **cls._notify_toggle(
+                "Изменения в расписании",
+                ToggleEnum.CHANGES,
+                user.notify_schedule_updates
+            )
+        )
+        builder.button(
+            **cls._notify_toggle(
+                "Напоминания о занятиях",
+                ToggleEnum.UPCOMING,
+                user.notify_upcoming_lessons
+            )
+        )
+        if user.subscriptions:
+            for sub in user.subscriptions:
+                builder.button(
+                    text=f"✖️ Отписаться от {sub.button_name}",
+                    callback_data=SubscriptionCallback(
+                        action=SubscriptionAction.UNSUBSCRIBE, sub_id=sub.id
+                    ).pack()
+                )
+        builder.adjust(1)
+        builder.row(Button.back_home, Button.home)
+        return builder.as_markup()
+
 
     @staticmethod
     @ttl_cache(maxsize=1, ttl=60 * 20)

@@ -11,17 +11,7 @@ import sys
 
 from config import settings
 from dependencies import Deps
-from handlers import (
-    entity_router,
-    error_router,
-    start_router,
-    main_router,
-    faculty_router,
-    teacher_router,
-    navigation_router,
-    subscription_router,
-    lessons_router
-)
+from handlers import *
 from middleware import UserContextMiddleware
 from tasks import setup_periodic_task_scheduler
 
@@ -68,6 +58,7 @@ async def main():
         main_router,
         navigation_router,
         start_router,
+        settings_router,
         subscription_router,
         teacher_router,
         lessons_router,

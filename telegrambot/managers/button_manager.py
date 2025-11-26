@@ -38,6 +38,9 @@ class LessonsCallback(CallbackData, prefix="les"):
     mode: str  # today, tomorrow, ahead, week
     shift: int = 0
 
+class ToggleCallback(CallbackData, prefix="toggle"):
+    flag_name: str
+
 
 class Button:
 
@@ -51,6 +54,7 @@ class Button:
     groups = InlineKeyboardButton(text="🎓Группы", callback_data=NavigationAction.FACULTIES)
     teachers = InlineKeyboardButton(text="👨‍🏫👩‍🏫Преподаватели", callback_data=NavigationAction.ALPHABET)
     site = InlineKeyboardButton(text="🌍Сайт", url=settings.base_link)
+    user_settings = InlineKeyboardButton(text="⚙️Настройки", callback_data=NavigationAction.SETTINGS)
 
     subscribe = InlineKeyboardButton(
         text="⭐ Подписаться",
