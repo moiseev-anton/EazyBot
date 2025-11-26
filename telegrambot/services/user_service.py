@@ -1,6 +1,6 @@
 import logging
 
-from dependency_injector.wiring import Provide, inject
+from dependency_injector.wiring import inject, Provide
 
 from dto import AuthDTO, AuthResponseDTO, UserDTO
 from repositories import JsonApiAccountRepository, JsonApiSubscriptionRepository, JsonApiUserRepository
@@ -32,3 +32,24 @@ class UserService:
         user.subscriptions = subscriptions
 
         return user
+
+    @inject
+    async def _toggle_flag(
+            self,
+            flag_name: str,
+            user_repo: JsonApiUserRepository = Provide["repositories.user"],
+    ):
+        user = await user_repo.get_user()
+        if not hasattr(user, flag_name):
+            raise ValueError(f"Unknown flag {flag_name}")
+        changes = {flag_name: not getattr(user, flag_name)}
+        await user_repo.update_user(changes)
+
+
+    async def toggle_notify_schedule_updates(self):
+        return await self._toggle_flag(flag_name="notify_schedule_updates")
+
+    async def toggle_notify_upcoming_lessons(self):
+        return await self._toggle_flag(flag_name="notify_upcoming_lessons")
+
+
