@@ -5,10 +5,10 @@ from dto.faculty_dto import FacultyDTO
 
 
 class GroupDTO(SubscriptableDTO):
-    id: int
+    # id: int
+    #endpoint: Optional[str] = None
     title: str
     grade: int
-    endpoint: Optional[str] = None
     faculty_id: int
     faculty: Optional[FacultyDTO] = None
 

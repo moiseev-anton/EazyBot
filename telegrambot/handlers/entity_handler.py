@@ -7,14 +7,14 @@ from dependency_injector.wiring import inject, Provide
 from dependencies import Deps
 from enums import Branch
 from states import get_state_data
-from managers import KeyboardManager, MessageManager
-from managers.button_manager import EntityCallback
+from messages import get_selected_msg
+from callbacks import EntityCallback
+from keyboards import get_actions_keyboard
 from services import GroupService, SubscriptionService, TeacherService
 from states import ActionStates
 
 logger = logging.getLogger(__name__)
 router = Router()
-
 
 @router.callback_query(EntityCallback.filter())
 @inject
@@ -45,8 +45,8 @@ async def entity_handler(
     subscription = await subscription_service.get_subscription_by_target(obj)
 
     await callback.message.edit_text(
-        text=MessageManager.get_selected_msg(obj, subscription),
-        reply_markup=KeyboardManager.get_actions_keyboard(obj, subscription),
+        text=get_selected_msg(obj, subscription),
+        reply_markup=get_actions_keyboard(obj, subscription),
     )
     await state.set_state(ActionStates.choosing_action)
     await callback.answer()

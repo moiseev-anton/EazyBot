@@ -7,8 +7,9 @@ from dependency_injector.wiring import Provide, inject
 
 from dependencies import Deps
 from dto import AuthDTO
-from managers import KeyboardManager, MessageManager
+from messages import get_start_message
 from services import UserService
+from keyboards import HOME_KB
 
 logger = logging.getLogger(__name__)
 router = Router()
@@ -34,8 +35,8 @@ async def start_handler(
         account = await user_service.auth_user(auth_dto)
 
         await message.answer(
-            text=MessageManager.get_start_message(account.user, account.created, account.nonce_status),
-            reply_markup=KeyboardManager.home
+            text=get_start_message(account.user, account.created, account.nonce_status),
+            reply_markup=HOME_KB
         )
     except Exception as e:
         logger.error(f"Error processing /start", exc_info=True)

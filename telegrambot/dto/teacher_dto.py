@@ -4,10 +4,10 @@ from dto.base_dto import SubscriptableDTO
 
 
 class TeacherDTO(SubscriptableDTO):
-    id: int
+    # id: int
+    # endpoint: Optional[str] = None
     full_name: str
     short_name: str
-    endpoint: Optional[str] = None
 
     class Config:
         frozen = True

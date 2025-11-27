@@ -6,8 +6,9 @@ from dependency_injector.wiring import inject, Provide
 
 from dependencies import Deps
 from enums import Branch
-from managers import KeyboardManager, MessageManager
-from managers.button_manager import AlphabetCallback
+from messages import LETTER_CHOOSING, TEACHERS_CHOOSING
+from keyboards import get_alphabet_keyboard, get_teachers_keyboard
+from callbacks import AlphabetCallback
 from services import TeacherService
 from states import TeacherStates
 
@@ -31,8 +32,8 @@ async def alphabet_handler(
     letters = teacher_service.get_letters()
 
     await callback.message.edit_text(
-        text=MessageManager.LETTER_CHOOSING,
-        reply_markup=KeyboardManager.get_alphabet_keyboard(letters),
+        text=LETTER_CHOOSING,
+        reply_markup=get_alphabet_keyboard(letters),
     )
     await state.set_state(TeacherStates.choosing_letter)
     await callback.answer()
@@ -56,8 +57,8 @@ async def teachers_bucket_handler(
     teachers = teacher_service.get_teachers(letter)
 
     await callback.message.edit_text(
-        text=MessageManager.TEACHERS_CHOOSING,
-        reply_markup=KeyboardManager.get_teachers_keyboard(teachers),
+        text=TEACHERS_CHOOSING,
+        reply_markup=get_teachers_keyboard(teachers),
     )
     await state.set_state(TeacherStates.choosing_teacher)
     await callback.answer()

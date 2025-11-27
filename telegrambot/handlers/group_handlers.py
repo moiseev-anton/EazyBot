@@ -4,13 +4,13 @@ from aiogram import F, Router, types
 from aiogram.fsm.context import FSMContext
 from dependency_injector.wiring import inject, Provide
 
+from callbacks import FacultyCallback, GradeCallback
 from dependencies import Deps
 from enums import Branch, NavigationAction
-from states import get_state_data
-from managers import KeyboardManager, MessageManager
-from managers.button_manager import FacultyCallback, GradeCallback
+from keyboards import get_faculties_keyboard, get_grades_keyboard, get_groups_keyboard
+from messages import FACULTY_CHOOSING, get_grade_choosing_msg, get_group_choosing_msg
 from services import GroupService
-from states import GroupStates
+from states import get_state_data, GroupStates
 
 logger = logging.getLogger(__name__)
 
@@ -33,8 +33,8 @@ async def faculties_handler(
     faculties = group_service.get_faculties()
 
     await callback.message.edit_text(
-        text=MessageManager.FACULTY_CHOOSING,
-        reply_markup=KeyboardManager.get_faculties_keyboard(faculties),
+        text=FACULTY_CHOOSING,
+        reply_markup=get_faculties_keyboard(faculties),
     )
     await state.set_state(GroupStates.choosing_faculty)
     await callback.answer()
@@ -59,8 +59,8 @@ async def faculty_grades_handler(
     grades = group_service.get_grades_for_faculty(faculty_id)
 
     await callback.message.edit_text(
-        text=MessageManager.get_grade_choosing_msg(faculty),
-        reply_markup=KeyboardManager.get_grades_keyboard(grades),
+        text=get_grade_choosing_msg(faculty),
+        reply_markup=get_grades_keyboard(grades),
     )
     await state.set_state(GroupStates.choosing_grade)
     await callback.answer()
@@ -88,8 +88,8 @@ async def course_groups_handler(
     groups = group_service.get_groups_for_faculty_grade(faculty_id, chosen_grade)
 
     await callback.message.edit_text(
-        text=MessageManager.get_group_choosing_msg(faculty, chosen_grade),
-        reply_markup=KeyboardManager.get_groups_keyboard(groups),
+        text=get_group_choosing_msg(faculty, chosen_grade),
+        reply_markup=get_groups_keyboard(groups),
     )
     await state.set_state(GroupStates.choosing_group)
     await callback.answer()

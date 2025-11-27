@@ -7,7 +7,8 @@ from aiogram.types import CallbackQuery, ErrorEvent, Message
 
 from exceptions import StateExpiredError
 from handlers.main_handler import main_callback_handler
-from managers import KeyboardManager, MessageManager
+from messages import ERROR_DEFAULT, STATE_DATA_EXPIRED
+from keyboards import HOME_KB
 
 logger = logging.getLogger(__name__)
 router = Router()
@@ -18,7 +19,7 @@ async def state_expired_callback_handler(event: ErrorEvent, callback: CallbackQu
     """ Обработка StateExpiredError в callback'ах. """
     logger.warning(f"State expired in callback from user {callback.from_user.id}: {event.exception}")
     await callback.answer(
-        text=MessageManager.STATE_DATA_EXPIRED,
+        text=STATE_DATA_EXPIRED,
         show_alert=True,  # Показывает как popup
     )
     await main_callback_handler(callback, state)
@@ -29,8 +30,8 @@ async def state_expired_message_handler(event: ErrorEvent, message: Message, sta
     """ Обработка StateExpiredError в сообщениях. """
     logger.warning(f"State expired in message from user {message.from_user.id}: {event.exception}")
     await message.answer(
-        text=MessageManager.STATE_DATA_EXPIRED,
-        reply_markup=KeyboardManager.home
+        text=STATE_DATA_EXPIRED,
+        reply_markup=HOME_KB
     )
     await state.clear()
 
@@ -40,11 +41,11 @@ async def general_error_callback_handler(event: ErrorEvent, callback: CallbackQu
     """ Обработка любых неожиданных ошибок в обработчиках callback'ов. """
     logger.error(
         f"Unexpected error in callback from user {callback.from_user.id}: {event.exception}",
-        exc_info=True  # Полный traceback в лог
+        exc_info=True  # traceback в лог
     )
     await callback.message.answer(
-        text=MessageManager.ERROR_DEFAULT,
-        reply_markup=KeyboardManager.home  # Твоя клавиатура с кнопкой домой
+        text=ERROR_DEFAULT,
+        reply_markup=HOME_KB
     )
     await state.clear()
     await callback.answer()
@@ -59,6 +60,6 @@ async def general_error_message_handler(event: ErrorEvent, message: Message, sta
     )
     await state.clear()
     await message.answer(
-        text=MessageManager.ERROR_DEFAULT,
-        reply_markup=KeyboardManager.home
+        text=ERROR_DEFAULT,
+        reply_markup=HOME_KB
     )

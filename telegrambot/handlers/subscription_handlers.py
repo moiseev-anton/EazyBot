@@ -6,11 +6,12 @@ from dependency_injector.wiring import inject, Provide
 
 from dependencies import Deps
 from enums import Branch, SubscriptionAction
+from messages import ALREADY_HAS_SUBSCRIPTION_WARNING
 from states import get_state_data
 from handlers.entity_handler import entity_handler
 from handlers.main_handler import main_callback_handler
-from managers import KeyboardManager, MessageManager
-from managers.button_manager import EntityCallback, SubscriptionCallback
+from keyboards import CONFIRM_KB
+from callbacks import EntityCallback, SubscriptionCallback
 from services import GroupService, SubscriptionService, TeacherService
 from states import ActionStates
 
@@ -28,8 +29,8 @@ async def subscribe_handler(
     if await subscription_service.has_any_subscriptions():
 
         await callback.message.edit_text(
-            text=MessageManager.ALREADY_HAS_SUBSCRIPTION_WARNING,
-            reply_markup=KeyboardManager.confirm,
+            text=ALREADY_HAS_SUBSCRIPTION_WARNING,
+            reply_markup=CONFIRM_KB,
         )
         await state.set_state(ActionStates.waiting_sub_confirm)
 

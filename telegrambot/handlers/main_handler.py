@@ -6,7 +6,8 @@ from dependency_injector.wiring import inject, Provide
 
 from dependencies import Deps
 from enums import NavigationAction
-from managers import KeyboardManager, MessageManager
+from keyboards import get_main_keyboard
+from messages import get_main_message
 from services import UserService
 
 router = Router()
@@ -22,8 +23,8 @@ async def build_main_menu_content(
         sub_id = first_subscription.id
         endpoint = first_subscription.endpoint
 
-    text = MessageManager.get_main_message(user)
-    reply_markup = KeyboardManager.get_main_keyboard(sub_id, endpoint)
+    text = get_main_message(user)
+    reply_markup = get_main_keyboard(sub_id, endpoint)
     return text, reply_markup
 
 

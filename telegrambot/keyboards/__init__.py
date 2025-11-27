@@ -1,0 +1,15 @@
+from .keyboards import (
+    HOME_KB,
+    BACK_HOME_KB,
+    MAIN_BASE_KB,
+    CONFIRM_KB,
+    get_main_keyboard,
+    get_settings_keyboard,
+    get_faculties_keyboard,
+    get_grades_keyboard,
+    get_groups_keyboard,
+    get_alphabet_keyboard,
+    get_teachers_keyboard,
+    get_actions_keyboard,
+    get_schedule_keyboard,
+)

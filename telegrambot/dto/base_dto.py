@@ -1,9 +1,12 @@
+from typing import Optional
+
 from pydantic import BaseModel
 
 
 class SubscriptableDTO(BaseModel):
     """Базовый класс для объектов, на которые можно подписываться."""
-    pass
+    id: int
+    endpoint: Optional[str] = None
 
     @property
     def button_name(self) -> str:

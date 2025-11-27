@@ -4,15 +4,15 @@ from aiogram import F, Router, types
 from aiogram.fsm.context import FSMContext
 from dependency_injector.wiring import inject, Provide
 
+from callbacks import LessonsCallback
 from dependencies import Deps
 from dto.base_dto import SubscriptableDTO
 from enums import Branch, EntitySource
-from states import get_state_data
-from managers import KeyboardManager, MessageManager
-from managers.button_manager import LessonsCallback
+from keyboards import get_schedule_keyboard
+from messages import get_schedule_msg
 from schedule_view_modes import ScheduleMode
 from services import GroupService, LessonService, SubscriptionService, TeacherService
-from states import ActionStates
+from states import ActionStates, get_state_data
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ async def lessons_handler(
 
     target_object: SubscriptableDTO = subs[0].object
     lessons = await lesson_service.get_lessons(target_object, date_span)
-    new_text = MessageManager.format_schedule(target_object, lessons, date_span)
+    new_text = get_schedule_msg(target_object, lessons, date_span)
 
     if new_text == callback.message.html_text:
         await callback.answer("💫 Обновлено")
@@ -46,7 +46,7 @@ async def lessons_handler(
     prev_page, next_page = mode.get_page_range(shift=shift)
     await callback.message.edit_text(
         text=new_text,
-        reply_markup=KeyboardManager.get_schedule_keyboard(callback_data, prev_page, next_page),
+        reply_markup=get_schedule_keyboard(callback_data, prev_page, next_page),
     )
     await callback.answer()
 
@@ -79,7 +79,7 @@ async def context_lessons_handler(
     shift = callback_data.shift
     date_span = mode.get_span(shift=shift)
     lessons = await lesson_service.get_lessons(target_object, date_span)
-    new_text = MessageManager.format_schedule(target_object, lessons, date_span)
+    new_text = get_schedule_msg(target_object, lessons, date_span)
 
     if new_text == callback.message.html_text:
         await callback.answer("💫 Обновлено")
@@ -87,8 +87,8 @@ async def context_lessons_handler(
 
     prev_page, next_page = mode.get_page_range(shift=shift)
     await callback.message.edit_text(
-        text=MessageManager.format_schedule(target_object, lessons, date_span),
-        reply_markup=KeyboardManager.get_schedule_keyboard(callback_data, prev_page, next_page),
+        text=new_text,
+        reply_markup=get_schedule_keyboard(callback_data, prev_page, next_page),
     )
     await state.set_state(ActionStates.reading_schedule)
     await callback.answer()

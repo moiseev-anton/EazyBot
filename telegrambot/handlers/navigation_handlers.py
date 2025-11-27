@@ -3,13 +3,13 @@ import logging
 from aiogram import F, Router, types
 from aiogram.fsm.context import FSMContext
 
+from callbacks import AlphabetCallback, EntityCallback, FacultyCallback, GradeCallback
 from enums import Branch, NavigationAction
 from handlers.entity_handler import entity_handler
 from handlers.group_handlers import course_groups_handler, faculties_handler, faculty_grades_handler
 from handlers.main_handler import main_callback_handler
 from handlers.subscription_handlers import create_subscription_handler
 from handlers.teacher_handlers import alphabet_handler, teachers_bucket_handler
-from managers.button_manager import AlphabetCallback, EntityCallback, FacultyCallback, GradeCallback
 from states import ActionStates, GroupStates, TeacherStates
 
 logger = logging.getLogger(__name__)
