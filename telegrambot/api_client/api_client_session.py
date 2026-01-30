@@ -73,6 +73,20 @@ class AsyncClientSession(Session):
 
     @staticmethod
     def ensure_trailing_slash(url: str):
+        """
+        Добавляет trailing slash в конец пути перед query-строкой (или в конец URL),
+        чтобы предотвратить 301-редирект со стороны сервера.
+
+        Зачем это нужно:
+        - Без слеша сервер часто делает 301-редирект на вариант со слешем
+        - После редиректа URL меняется → HMAC-подпись становится невалидной
+
+        Применяется только к мутирующим запросам (POST, PATCH, DELETE),
+        так как для GET-методов слеш уже добавляется в _url_for_resource.
+
+        URL для мутирующих запросов формируется внутри ResourceObject,
+        поэтому проще добавить слеш постфактум, чем патчить весь класс.
+        """
         if "?" in url:
             path, query = url.split("?", 1)
             return path.rstrip("/") + "/?" + query
@@ -90,7 +104,11 @@ class AsyncClientSession(Session):
 
         timestamp = str(int(time.time()))
         body_hash = hashlib.sha256(body or b"").hexdigest()
-        message = f"{method.upper()}\n{url}\n{timestamp}\n{self.platform}\n{social_id}\n{body_hash}".encode("utf-8")
+
+        u = yarl.URL(url)
+        full_path = f"{u.path}?{u.query_string}" if u.query_string else u.path
+
+        message = f"{method.upper()}\n{full_path}\n{timestamp}\n{self.platform}\n{social_id}\n{body_hash}".encode("utf-8")
         signature = hmac.new(self.hmac_secret, message, hashlib.sha256).hexdigest()
         # logger.info(message)
 
