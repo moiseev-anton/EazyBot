@@ -9,7 +9,6 @@ BASE_DIR = Path(__file__).resolve().parent
 class Settings(BaseSettings):
     api_base_url: str
     hmac_secret: str
-    bot_social_id: str
     bot_token: str
     redis_storage_url: str
     storage_state_ttl: int
