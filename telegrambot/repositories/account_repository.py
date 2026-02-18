@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 class JsonApiAccountRepository(JsonApiBaseRepository):
     AUTH_URL = "/auth/"
-    AUTH_WITH_NONCE_URL = "/auth_with_nonce/"
+    AUTH_WITH_NONCE_URL = "/auth-with-nonce/"
 
     async def get_or_create(self, auth_dto: AuthDTO) -> AuthResponseDTO:
         try:
