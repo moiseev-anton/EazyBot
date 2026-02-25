@@ -41,14 +41,14 @@ def get_start_message(
     auth_message = _AUTH_MESSAGES.get(nonce_status, "") if nonce_status else ""
     if not is_created and auth_message:
         return auth_message
-    name = user.first_name
+    name = user.name
     welcome = _WELCOME_NEW.format(name=name) if is_created else _WELCOME_BACK.format(name=name)
     return f"{welcome}\n\n{auth_message}" if auth_message else welcome
 
 
 def get_main_message(user: UserDTO) -> str:
     lines = [
-        f"👤 <b>{f"{user.first_name} {user.last_name}"}</b>",
+        f"👤 <b>{f"{user.name}"}</b>",
         f"🪪 <i>{user.username}</i>\n",
         "Расписание:"
     ]
@@ -67,7 +67,7 @@ def get_grade_choosing_msg(faculty: FacultyDTO) -> str:
             "Выберите курс:")
 
 
-def get_group_choosing_msg(cls, faculty: FacultyDTO, grade: int) -> str:
+def get_group_choosing_msg(faculty: FacultyDTO, grade: int) -> str:
     """Сообщение для выбора группы с указанием факультета и курса."""
     return (f"{faculty.title}\n"
             f"{grade} курс\n"

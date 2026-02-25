@@ -25,6 +25,13 @@ class UserDTO(BaseModel):
     class Config:
         _resource_name = "users"
 
+    @property
+    def name(self) -> str:
+        parts = [self.first_name, self.last_name]
+        full = " ".join(p.strip() for p in parts if p and p.strip())
+        return full or "Anonymous"
+
+
     @field_validator("id", "username")
     def validate_non_empty(cls, value: str) -> str:
         value = value.strip()
