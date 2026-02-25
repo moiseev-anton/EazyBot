@@ -63,7 +63,7 @@ class JsonApiLessonRepository(JsonApiBaseRepository):
                 await lesson.teacher.fetch()
 
                 group_dto = self._get_or_create_dto(lesson.group.resource, related_dto_cache)
-                teacher_dto = self._get_or_create_dto(lesson.teacher.resource, related_dto_cache)
+                teacher_dto = self._get_or_create_dto(res, related_dto_cache) if (res := lesson.teacher.resource) else None
 
                 lessons.append(LessonDTO.from_jsonapi(lesson, group_dto, teacher_dto))
 
