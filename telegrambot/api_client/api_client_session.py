@@ -106,7 +106,7 @@ class AsyncClientSession(Session):
         body_hash = hashlib.sha256(body or b"").hexdigest()
 
         u = yarl.URL(url)
-        full_path = f"{u.path}?{u.query_string}" if u.query_string else u.path
+        full_path = u.raw_path_qs
 
         message = f"{method.upper()}\n{full_path}\n{timestamp}\n{self.platform}\n{social_id}\n{body_hash}".encode("utf-8")
         signature = hmac.new(self.hmac_secret, message, hashlib.sha256).hexdigest()
