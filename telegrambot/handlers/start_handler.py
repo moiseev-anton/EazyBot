@@ -36,7 +36,7 @@ async def start_handler(
 
         await message.answer(
             text=get_start_message(account.user, account.created, account.nonce_status),
-            reply_markup=HOME_KB
+            reply_markup=None if auth_dto.nonce else HOME_KB,
         )
     except Exception as e:
         logger.error(f"Error processing /start", exc_info=True)
