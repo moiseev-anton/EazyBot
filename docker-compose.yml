@@ -1,0 +1,18 @@
+services:
+  bot:
+    build: .
+    container_name: telegram-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    networks:
+      - backend_net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS --max-time 3 http://django:8000/health/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  backend_net:
+    external: true
