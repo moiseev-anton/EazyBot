@@ -48,7 +48,7 @@ def get_start_message(
 
 def get_main_message(user: UserDTO) -> str:
     lines = [
-        f"👤 <b>{f"{user.name}"}</b>",
+        f"👤 <b>{user.name}</b>",
         f"🪪 <i>{user.username}</i>\n",
         "Расписание:"
     ]

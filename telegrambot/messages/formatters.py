@@ -78,7 +78,8 @@ def format_schedule(
             continue
 
         formatted_lessons = [formatter(l) for l in sorted(day_lessons, key=lambda l: l.number)]
-        lines.append(f"<blockquote{blockquote_attr}>{'\n\n'.join(formatted_lessons)}</blockquote>\n")
+        joined_lessons = "\n\n".join(formatted_lessons)
+        lines.append(f"<blockquote{blockquote_attr}>{joined_lessons}</blockquote>\n")
 
     return "\n".join(lines).strip()
 
