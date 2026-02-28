@@ -13,6 +13,13 @@ class Settings(BaseSettings):
     redis_storage_url: str
     storage_state_ttl: int
     storage_data_ttl: int
+
+    bot_mode: str
+    webhook_url: str
+    base_webhook_url: str
+    webhook_path: str
+    webhook_port: int
+    webhook_secret: str
     platform: str = "telegram"
 
     base_link: str = Field(alias="base_scraping_url")
@@ -32,6 +39,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=BASE_DIR.parent / ".env",
         env_file_encoding="utf-8",
+        env_nested_delimiter="__",
         case_sensitive=False,
         extra="ignore",  # Игнорировать лишние поля в .env
     )
@@ -44,4 +52,5 @@ if __name__ == "__main__":
     print(settings.hmac_secret)
     print(settings.api_base_url)
     print(settings.base_link)
-    print(settings.bot_social_id)
+    print(settings.webhook_url)
+    print(settings.webhook_secret)
