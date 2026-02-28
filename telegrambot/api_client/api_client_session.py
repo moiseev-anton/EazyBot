@@ -20,7 +20,6 @@ from jsonapi_client.document import Document
 from jsonapi_client.exceptions import DocumentError
 from api_client.exceptions import NotModifiedError
 from context import request_context
-from dto import GroupDTO, SubscriptionDTO, TeacherDTO
 
 logger = logging.getLogger(__name__)
 
@@ -157,7 +156,7 @@ class AsyncClientSession(Session):
     @thunder_protection(prefix="_ext_fetch_by_url_async")
     async def _ext_fetch_by_url_async(self, url: str) -> 'Document':
         json_data, etag = await self._fetch_json_async(url)
-        print(json_data)
+        logger.debug(json_data)
         return self.read(json_data, url, etag=etag)
 
     def read(self, json_data: dict, url='', etag=None, no_cache=False) -> 'Document':
