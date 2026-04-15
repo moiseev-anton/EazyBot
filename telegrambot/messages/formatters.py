@@ -23,9 +23,11 @@ def format_time(value: Optional[time]) -> str:
 def format_lesson_for_group(lesson: LessonDTO) -> str:
     number_emoji = replace_digits_to_emojis(lesson.number)
     start = format_time(lesson.startTime)
+    end = format_time(lesson.endTime)
+    part = f" | {replace_digits_to_emojis(lesson.part)}" if lesson.part else ""
 
     lines = [
-        f"{number_emoji}  <b>{start}</b>   📍{lesson.classroom or '-'}",
+        f"{number_emoji}<b>{part}   {start} - {end}</b>   📍{lesson.classroom or '-'}",
         f"<b>{lesson.subject}</b>",
         (f"{lesson.subgroup} подгруппа" if lesson.subgroup and lesson.subgroup != "0" else None),
         f"<i>{lesson.teacher.short_name}</i>" if lesson.teacher else None,
@@ -36,9 +38,11 @@ def format_lesson_for_group(lesson: LessonDTO) -> str:
 def format_lesson_for_teacher(lesson: LessonDTO) -> str:
     number_emoji = replace_digits_to_emojis(lesson.number)
     start = format_time(lesson.startTime)
+    end = format_time(lesson.endTime)
+    part = f" | {replace_digits_to_emojis(lesson.part)}" if lesson.part else ""
 
     lines = [
-        f"{number_emoji}  <b>{start}</b>   📍{lesson.classroom or '-'}",
+        f"{number_emoji}<b>{part}   {start} - {end}</b>   📍{lesson.classroom or '-'}",
         f"<b>{lesson.subject}</b>",
         f"<i>{lesson.group.title}</i>" if lesson.group else None,
         (f"{lesson.subgroup} подгруппа" if lesson.subgroup and lesson.subgroup != "0" else None),
@@ -77,7 +81,7 @@ def format_schedule(
             lines.append("<i>Занятий нет</i>\n")
             continue
 
-        formatted_lessons = [formatter(l) for l in sorted(day_lessons, key=lambda l: l.number)]
+        formatted_lessons = [formatter(l) for l in sorted(day_lessons, key=lambda l: (l.number, l.part))]
         joined_lessons = "\n\n".join(formatted_lessons)
         lines.append(f"<blockquote{blockquote_attr}>{joined_lessons}</blockquote>\n")
 
