@@ -9,12 +9,13 @@ from dto.teacher_dto import TeacherDTO
 class LessonDTO(BaseModel):
     id: int
     number: int
+    part: int = 0
     date: str
     startTime: Optional[time]
     endTime: Optional[time]
     subject: str
     classroom: str
-    subgroup: str
+    subgroup: str = 0
     _group_id: int
     group: Optional[GroupDTO] = None
     _teacher_id: Optional[int]
@@ -44,6 +45,7 @@ class LessonDTO(BaseModel):
         return cls(
             id=int(l.id),
             number=l.number,
+            part=l.part,
             date=l.date,
             startTime=l.startTime,
             endTime=l.endTime,
