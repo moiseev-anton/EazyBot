@@ -5,6 +5,7 @@ from common import replace_digits_to_emojis
 
 from dto import DateSpanDTO, GroupDTO, LessonDTO, TeacherDTO
 from dto.base_dto import SubscriptableDTO
+from enums import LessonDisplayMode
 
 _WEEKDAYS_RU = (
         "ПОНЕДЕЛЬНИК", "ВТОРНИК", "СРЕДА", "ЧЕТВЕРГ",
@@ -19,41 +20,35 @@ def format_time(value: Optional[time]) -> str:
     return value.strftime("%H:%M") if value else "--:--"
 
 
-# === Форматировщики урока ===
-def format_lesson_for_group(lesson: LessonDTO) -> str:
+# === Форматировщик урока ===
+def format_lesson(lesson: LessonDTO, mode: LessonDisplayMode = LessonDisplayMode.FULL) -> str:
     number_emoji = replace_digits_to_emojis(lesson.number)
     start = format_time(lesson.startTime)
     end = format_time(lesson.endTime)
     part = f" | {replace_digits_to_emojis(lesson.part)}" if lesson.part else ""
 
     lines = [
-        f"{number_emoji}<b>{part}   {start} - {end}</b>   📍{lesson.classroom or '-'}",
+        f"{number_emoji}<b>{part} {start} - {end}</b> 📍{lesson.classroom or '-'}",
         f"<b>{lesson.subject}</b>",
-        (f"{lesson.subgroup} подгруппа" if lesson.subgroup and lesson.subgroup != "0" else None),
-        f"<i>{lesson.teacher.short_name}</i>" if lesson.teacher else None,
     ]
-    return "\n".join(filter(None, lines))
 
+    if LessonDisplayMode.SHOW_SUBGROUP in mode and lesson.subgroup and lesson.subgroup != "0":
+        lines.append(f"{lesson.subgroup} подгруппа")
 
-def format_lesson_for_teacher(lesson: LessonDTO) -> str:
-    number_emoji = replace_digits_to_emojis(lesson.number)
-    start = format_time(lesson.startTime)
-    end = format_time(lesson.endTime)
-    part = f" | {replace_digits_to_emojis(lesson.part)}" if lesson.part else ""
+    if LessonDisplayMode.SHOW_GROUP in mode and lesson.group:
+        lines.append(f"<i>{lesson.group.title}</i>")
 
-    lines = [
-        f"{number_emoji}<b>{part}   {start} - {end}</b>   📍{lesson.classroom or '-'}",
-        f"<b>{lesson.subject}</b>",
-        f"<i>{lesson.group.title}</i>" if lesson.group else None,
-        (f"{lesson.subgroup} подгруппа" if lesson.subgroup and lesson.subgroup != "0" else None),
-    ]
-    return "\n".join(filter(None, lines))
+    if LessonDisplayMode.SHOW_TEACHER in mode and lesson.teacher:
+        lines.append(f"<i>{lesson.teacher.short_name}</i>")
+
+    return "\n".join(lines)
+
 
 
 # === Форматировщик расписания ===
 _FORMATTERS = {
-    GroupDTO: format_lesson_for_group,
-    TeacherDTO: format_lesson_for_teacher,
+    GroupDTO: lambda l: format_lesson(l, LessonDisplayMode.FOR_GROUP),
+    TeacherDTO: lambda l: format_lesson(l, LessonDisplayMode.FOR_TEACHER),
 }
 
 _EXPANDABLE_THRESHOLD = 10

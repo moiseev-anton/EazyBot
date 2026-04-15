@@ -1,4 +1,4 @@
-from enum import StrEnum
+from enum import auto, Flag, StrEnum
 
 
 class EntitySource(StrEnum):
@@ -35,3 +35,14 @@ class ModeEnum(StrEnum):
 class ToggleEnum(StrEnum):
     UPCOMING = "upcoming"
     CHANGES = "changes"
+
+
+class LessonDisplayMode(Flag):
+    SHOW_GROUP = auto()
+    SHOW_TEACHER = auto()
+    SHOW_SUBGROUP = auto()
+
+    # Предустановленные режимы
+    FOR_GROUP = SHOW_TEACHER | SHOW_SUBGROUP
+    FOR_TEACHER = SHOW_GROUP | SHOW_SUBGROUP
+    FULL = SHOW_GROUP | SHOW_TEACHER | SHOW_SUBGROUP
