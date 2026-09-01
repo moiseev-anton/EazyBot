@@ -4,6 +4,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder, InlineKeyboardMarkup
 from cachetools.func import ttl_cache
 
 from callbacks import EntityCallback, FacultyCallback, LessonsCallback, SubscriptionCallback
+from config import settings
 from dto import FacultyDTO, GroupDTO, SubscriptionDTO, TeacherDTO, UserDTO
 from dto.base_dto import SubscriptableDTO
 from enums import EntitySource, SubscriptionAction, ToggleEnum
@@ -37,7 +38,7 @@ def get_main_keyboard(
         builder.row(*row)
     builder.row(buttons.GROUPS, buttons.TEACHERS)
     builder.row(buttons.USER_SETTINGS)
-    if endpoint is not None:
+    if settings.show_entity_links and endpoint:
         builder.row(buttons.get_url_button(endpoint))
     else:
         builder.row(buttons.SITE)
@@ -154,7 +155,7 @@ def get_actions_keyboard(
         builder.add(buttons.unsubscribe(subscription.id))
     else:
         builder.add(buttons.SUBSCRIBE)
-    if obj.endpoint is not None:
+    if settings.show_entity_links and obj.endpoint:
         builder.add(buttons.get_url_button(obj.endpoint))
     builder.adjust(2, 2, 1)
     builder.row(buttons.BACK, buttons.HOME)

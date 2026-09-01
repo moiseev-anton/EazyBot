@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     platform: str = "telegram"
 
     base_link: str = Field(alias="base_scraping_url")
+    show_entity_links: bool = True
 
     groups_cache_file_path: str = str(BASE_DIR / "cache" / "groups.json")
     teachers_cache_file_path: str = str(BASE_DIR / "cache" / "teachers.json")
