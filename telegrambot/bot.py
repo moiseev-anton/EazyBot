@@ -13,7 +13,7 @@ from aiohttp import web
 from config import settings
 from dependencies import Deps
 from handlers import *
-from middleware import UserContextMiddleware
+from middleware import CallbackLockMiddleware, UserContextMiddleware
 from tasks import setup_periodic_task_scheduler
 
 from aiogram import Bot, Dispatcher
@@ -67,6 +67,7 @@ def main():
     dp = Dispatcher(bot=bot, storage=storage, deps=container)
     dp.message.middleware(UserContextMiddleware())
     dp.callback_query.middleware(UserContextMiddleware())
+    dp.callback_query.middleware(CallbackLockMiddleware(storage))
 
     dp.include_routers(
         entity_router,

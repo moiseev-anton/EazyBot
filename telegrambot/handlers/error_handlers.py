@@ -1,6 +1,7 @@
 import logging
 
 from aiogram import F, Router
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import ExceptionTypeFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, ErrorEvent, Message
@@ -39,6 +40,13 @@ async def state_expired_message_handler(event: ErrorEvent, message: Message, sta
 @router.error(ExceptionTypeFilter(Exception), F.update.callback_query.as_("callback"))
 async def general_error_callback_handler(event: ErrorEvent, callback: CallbackQuery, state: FSMContext):
     """ Обработка любых неожиданных ошибок в обработчиках callback'ов. """
+    if (
+        isinstance(event.exception, TelegramBadRequest)
+        and "message is not modified" in str(event.exception).lower()
+    ):
+        await callback.answer()
+        return
+
     logger.error(
         f"Unexpected error in callback from user {callback.from_user.id}: {event.exception}",
         exc_info=True  # traceback в лог
