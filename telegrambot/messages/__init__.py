@@ -14,6 +14,8 @@ from .messages import (
 )
 from .rich_messages import (
     add_rich_keyboard,
+    add_rich_footer,
+    add_rich_note,
     get_rich_choosing_message,
     get_rich_main_message,
     get_rich_schedule_msg,

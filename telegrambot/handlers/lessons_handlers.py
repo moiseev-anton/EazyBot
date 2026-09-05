@@ -11,7 +11,7 @@ from dto import DateSpanDTO, LessonDTO
 from dto.base_dto import SubscriptableDTO
 from enums import Branch, EntitySource
 from keyboards import get_schedule_keyboard
-from messages import add_rich_keyboard, get_rich_schedule_msg, get_schedule_msg
+from messages import add_rich_keyboard, add_rich_note, get_rich_schedule_msg, get_schedule_msg
 from schedule_view_modes import ScheduleMode
 from services import GroupService, LessonService, SubscriptionService, TeacherService
 from states import ActionStates, get_state_data
@@ -110,8 +110,11 @@ async def _edit_schedule_message(
     try:
         if isinstance(callback_data, RichLessonsCallback):
             await callback.message.edit_text(
-                rich_message=add_rich_keyboard(
-                    get_rich_schedule_msg(target_obj, lessons, date_span), reply_markup
+                rich_message=add_rich_note(
+                    add_rich_keyboard(
+                        get_rich_schedule_msg(target_obj, lessons, date_span), reply_markup
+                    ),
+                    "Для актуальных данных обновите расписание.",
                 ),
             )
         else:

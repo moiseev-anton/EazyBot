@@ -8,7 +8,7 @@ from dependencies import Deps
 from callbacks import ScheduleUiCallback
 from enums import NavigationAction, ScheduleStyle
 from keyboards import get_main_keyboard
-from messages import add_rich_keyboard, get_main_message, get_rich_main_message
+from messages import add_rich_footer, add_rich_keyboard, get_main_message, get_rich_main_message
 from services import TelegramUiPreferences, UserService
 
 router = Router()
@@ -29,7 +29,10 @@ async def build_main_menu_content(
     schedule_style = await telegram_ui_preferences.get_schedule_style(telegram_user_id)
     reply_markup = get_main_keyboard(sub_id, endpoint, schedule_style)
     if schedule_style == ScheduleStyle.RICH:
-        text = add_rich_keyboard(get_rich_main_message(user), reply_markup)
+        text = add_rich_footer(
+            add_rich_keyboard(get_rich_main_message(user), reply_markup),
+            "Вернуть старый UI можно в настройках.",
+        )
         reply_markup = None
     else:
         text = get_main_message(user)

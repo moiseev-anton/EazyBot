@@ -8,6 +8,7 @@ from aiogram.types import (
     InputRichBlockSectionHeading,
     InputRichMessage,
     RichTextBold,
+    RichTextItalic,
     RichTextMarked,
     RichMessageButton,
 )
@@ -56,7 +57,6 @@ def get_rich_main_message(user: UserDTO) -> InputRichMessage:
                 ]
             )
         )
-    blocks.append(InputRichBlockFooter(text="Вернуть старый UI можно в настройках."))
     return InputRichMessage(blocks=blocks)
 
 
@@ -71,6 +71,16 @@ def add_rich_keyboard(
                 buttons=[_to_rich_button(button) for button in row]
             )
         )
+    return message
+
+
+def add_rich_footer(message: InputRichMessage, text: str) -> InputRichMessage:
+    message.blocks.append(InputRichBlockFooter(text=RichTextItalic(text=text)))
+    return message
+
+
+def add_rich_note(message: InputRichMessage, text: str) -> InputRichMessage:
+    message.blocks.append(InputRichBlockParagraph(text=RichTextItalic(text=text)))
     return message
 
 
@@ -139,7 +149,6 @@ def get_rich_subscription_replacement_warning() -> InputRichMessage:
 
 def get_rich_settings_message(user: UserDTO) -> InputRichMessage:
     message = get_rich_main_message(user)
-    message.blocks.pop()
     if user.subscriptions:
         message.blocks.append(
             InputRichBlockSectionHeading(text="Подписки", size=3)

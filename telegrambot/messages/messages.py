@@ -60,7 +60,6 @@ def get_main_message(user: UserDTO) -> str:
     lines.extend([
         "",
         "✨ Доступен новый формат расписания.",
-        "Если он не отображается, обновите Telegram.",
     ])
     return "\n".join(lines)
 

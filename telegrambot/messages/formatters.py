@@ -3,7 +3,6 @@ from datetime import time, timedelta, date as Date
 from typing import Optional
 from aiogram.types import (
     InputRichBlockDetails,
-    InputRichBlockParagraph,
     InputRichBlockSectionHeading,
     InputRichBlockTable,
     InputRichMessage,
@@ -129,12 +128,6 @@ def format_rich_schedule(
                 ],
             )
         )
-
-    blocks.append(
-        InputRichBlockParagraph(
-            text=RichTextItalic(text="Обновите расписание для актуальных данных.")
-        )
-    )
 
     return InputRichMessage(blocks=blocks)
 
