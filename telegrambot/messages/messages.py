@@ -57,6 +57,11 @@ def get_main_message(user: UserDTO) -> str:
             lines.append(f"⭐️ <b>{sub.button_name}</b>")
     else:
         lines.append(f"<b>☆ не выбрано</b>")
+    lines.extend([
+        "",
+        "✨ Доступен новый формат расписания.",
+        "Если он не отображается, обновите Telegram.",
+    ])
     return "\n".join(lines)
 
 

@@ -3,11 +3,17 @@ from typing import Optional
 from aiogram.utils.keyboard import InlineKeyboardBuilder, InlineKeyboardMarkup
 from cachetools.func import ttl_cache
 
-from callbacks import EntityCallback, FacultyCallback, LessonsCallback, SubscriptionCallback
+from callbacks import (
+    EntityCallback,
+    FacultyCallback,
+    LessonsCallback,
+    RichLessonsCallback,
+    SubscriptionCallback,
+)
 from config import settings
 from dto import FacultyDTO, GroupDTO, SubscriptionDTO, TeacherDTO, UserDTO
 from dto.base_dto import SubscriptableDTO
-from enums import EntitySource, SubscriptionAction, ToggleEnum
+from enums import EntitySource, ScheduleStyle, SubscriptionAction, ToggleEnum
 from . import buttons
 
 ALPHABET_KEYBOARD_ROW_WIDTH = 5
@@ -29,15 +35,17 @@ CONFIRM_KB = InlineKeyboardMarkup(inline_keyboard=[[buttons.BACK, buttons.CONFIR
 @ttl_cache(maxsize=1000, ttl=180)
 def get_main_keyboard(
         subscription_id: Optional[int | str] = None,
-        endpoint: Optional[str] = None
+        endpoint: Optional[str] = None,
+        schedule_style: ScheduleStyle = ScheduleStyle.LEGACY,
 ) -> InlineKeyboardMarkup:
-    if not subscription_id:
-        return MAIN_BASE_KB  # только базовое меню
     builder = InlineKeyboardBuilder()
-    for row in buttons.schedule_menu(source=EntitySource.SUBSCRIPTION):
-        builder.row(*row)
+    if subscription_id:
+        for row in buttons.schedule_menu(source=EntitySource.SUBSCRIPTION, style=schedule_style):
+            builder.row(*row)
     builder.row(buttons.GROUPS, buttons.TEACHERS)
     builder.row(buttons.USER_SETTINGS)
+    if schedule_style == ScheduleStyle.LEGACY:
+        builder.row(buttons.get_schedule_ui_toggle(schedule_style))
     if settings.show_entity_links and endpoint:
         builder.row(buttons.get_url_button(endpoint))
     else:
@@ -45,7 +53,10 @@ def get_main_keyboard(
     return builder.as_markup()
 
 
-def get_settings_keyboard(user: UserDTO) -> InlineKeyboardMarkup:
+def get_settings_keyboard(
+        user: UserDTO,
+        schedule_style: ScheduleStyle = ScheduleStyle.LEGACY,
+) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.row(
         buttons.get_notify_toggle(
@@ -61,7 +72,7 @@ def get_settings_keyboard(user: UserDTO) -> InlineKeyboardMarkup:
             user.notify_upcoming_lessons
         )
     )
-    if user.subscriptions:
+    if user.subscriptions and schedule_style != ScheduleStyle.RICH:
         for sub in user.subscriptions:
             builder.button(
                 text=f"✖️ Отписаться от {sub.button_name}",
@@ -69,6 +80,8 @@ def get_settings_keyboard(user: UserDTO) -> InlineKeyboardMarkup:
                     action=SubscriptionAction.UNSUBSCRIBE, sub_id=sub.id
                 ).pack()
             )
+    if schedule_style == ScheduleStyle.RICH:
+        builder.row(buttons.get_schedule_ui_toggle(schedule_style))
     builder.adjust(1)
     builder.row(buttons.BACK_HOME, buttons.HOME)
     return builder.as_markup()
@@ -145,44 +158,62 @@ def get_teachers_keyboard(teachers: tuple[TeacherDTO, ...]) -> InlineKeyboardMar
 
 def get_actions_keyboard(
         obj: SubscriptableDTO,
-        subscription: Optional[SubscriptionDTO] = None
+        subscription: Optional[SubscriptionDTO] = None,
+        schedule_style: ScheduleStyle = ScheduleStyle.LEGACY,
 ) -> InlineKeyboardMarkup:
     """Собирает клавиатуру действий для выбранного объекта (группы или учителя)"""
     builder = InlineKeyboardBuilder()
-    for row in buttons.schedule_menu(source=EntitySource.CONTEXT):
+    for row in buttons.schedule_menu(source=EntitySource.CONTEXT, style=schedule_style):
         builder.row(*row)
     if subscription is not None:
-        builder.add(buttons.unsubscribe(subscription.id))
+        subscription_button = buttons.unsubscribe(subscription.id)
     else:
-        builder.add(buttons.SUBSCRIBE)
-    if settings.show_entity_links and obj.endpoint:
-        builder.add(buttons.get_url_button(obj.endpoint))
-    builder.adjust(2, 2, 1)
+        subscription_button = buttons.SUBSCRIBE
+
+    if schedule_style == ScheduleStyle.RICH:
+        builder.row(subscription_button)
+    else:
+        builder.add(subscription_button)
+        if settings.show_entity_links and obj.endpoint:
+            builder.add(buttons.get_url_button(obj.endpoint))
+        builder.adjust(2, 2, 1)
+
+    if schedule_style == ScheduleStyle.RICH and settings.show_entity_links and obj.endpoint:
+        builder.row(buttons.get_url_button(obj.endpoint))
     builder.row(buttons.BACK, buttons.HOME)
     return builder.as_markup()
 
 
 def get_schedule_keyboard(
-        callback_data: LessonsCallback,
+        callback_data: LessonsCallback | RichLessonsCallback,
         prev_page: int | None,
         next_page: int | None,
 ) -> InlineKeyboardMarkup:
     """Собирает клавиатуру действий для выбранного объекта (группы или учителя)"""
     builder = InlineKeyboardBuilder()
-    source, mode, shift = callback_data.source, callback_data.mode, callback_data.shift
+    source, mode, shift = (
+        callback_data.source,
+        callback_data.mode,
+        callback_data.shift,
+    )
+    style = (
+        ScheduleStyle.RICH
+        if isinstance(callback_data, RichLessonsCallback)
+        else ScheduleStyle.LEGACY
+    )
     if prev_page is not None:
         builder.button(
             text="◀️",
-            callback_data=LessonsCallback(source=source, mode=mode, shift=prev_page).pack(),
+            callback_data=_schedule_callback(style, source, mode, prev_page).pack(),
         )
     builder.button(
         text="🔄 Обновить" if shift == 0 else "🔄 Сегодня",
-        callback_data=LessonsCallback(source=source, mode=mode).pack(),
+        callback_data=_schedule_callback(style, source, mode).pack(),
     )
     if next_page is not None:
         builder.button(
             text="▶️",
-            callback_data=LessonsCallback(source=source, mode=mode, shift=next_page).pack()
+            callback_data=_schedule_callback(style, source, mode, next_page).pack()
         )
     builder.adjust(3)
 
@@ -192,3 +223,13 @@ def get_schedule_keyboard(
         builder.row(buttons.BACK, buttons.HOME)
 
     return builder.as_markup()
+
+
+def _schedule_callback(
+        style: ScheduleStyle,
+        source: str,
+        mode: str,
+        shift: int = 0,
+) -> LessonsCallback | RichLessonsCallback:
+    callback_class = RichLessonsCallback if style == ScheduleStyle.RICH else LessonsCallback
+    return callback_class(source=source, mode=mode, shift=shift)

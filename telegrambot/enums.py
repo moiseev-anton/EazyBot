@@ -32,6 +32,12 @@ class ModeEnum(StrEnum):
     THREE_DAYS = "3days"
     WEEK = "week"
 
+
+class ScheduleStyle(StrEnum):
+    LEGACY = "legacy"
+    RICH = "rich"
+
+
 class ToggleEnum(StrEnum):
     UPCOMING = "upcoming"
     CHANGES = "changes"

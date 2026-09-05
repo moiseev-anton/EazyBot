@@ -8,6 +8,8 @@ __all__ = [
     "FacultyCallback",
     "GradeCallback",
     "LessonsCallback",
+    "RichLessonsCallback",
+    "ScheduleUiCallback",
     "SubscriptionCallback",
     "ToggleCallback"
 ]
@@ -33,6 +35,16 @@ class LessonsCallback(CallbackData, prefix="les"):
     source: str  # context, subscription
     mode: str  # today, tomorrow, ahead, week
     shift: int = 0
+
+
+class RichLessonsCallback(CallbackData, prefix="rles"):
+    source: str  # context, subscription
+    mode: str  # today, tomorrow, ahead, week
+    shift: int = 0
+
+
+class ScheduleUiCallback(CallbackData, prefix="sui"):
+    style: str
 
 
 class SubscriptionCallback(CallbackData, prefix="sub"):

@@ -3,9 +3,9 @@ from functools import lru_cache
 from typing import List
 from aiogram.utils.keyboard import InlineKeyboardButton
 from config import settings
-from enums import NavigationAction, ModeEnum, SubscriptionAction
+from enums import NavigationAction, ModeEnum, ScheduleStyle, SubscriptionAction
 from callbacks import FacultyCallback, GradeCallback, AlphabetCallback, EntityCallback, LessonsCallback, \
-    SubscriptionCallback, ToggleCallback  # Изменено: callbacks в keyboards
+    RichLessonsCallback, ScheduleUiCallback, SubscriptionCallback, ToggleCallback  # Изменено: callbacks в keyboards
 from common import replace_digits_to_emojis
 
 logger = logging.getLogger(__name__)
@@ -43,7 +43,15 @@ def get_notify_toggle(title: str, flag_name: str, enabled: bool) -> InlineKeyboa
 
 
 @lru_cache(maxsize=None)
-def schedule_menu(source: str) -> List[List[InlineKeyboardButton]]:
+def schedule_menu(source: str, style: ScheduleStyle = ScheduleStyle.LEGACY) -> List[List[InlineKeyboardButton]]:
+    if style == ScheduleStyle.RICH:
+        return [[
+            InlineKeyboardButton(
+                text="🗓 Расписание",
+                callback_data=RichLessonsCallback(source=source, mode=ModeEnum.WEEK).pack(),
+            ),
+        ]]
+
     return [
         [
             InlineKeyboardButton(
@@ -66,6 +74,15 @@ def schedule_menu(source: str) -> List[List[InlineKeyboardButton]]:
             ),
         ],
     ]
+
+
+def get_schedule_ui_toggle(style: ScheduleStyle) -> InlineKeyboardButton:
+    target_style = ScheduleStyle.RICH if style == ScheduleStyle.LEGACY else ScheduleStyle.LEGACY
+    text = "✨ Новый UI" if target_style == ScheduleStyle.RICH else "📝 Старый UI"
+    return InlineKeyboardButton(
+        text=text,
+        callback_data=ScheduleUiCallback(style=target_style).pack(),
+    )
 
 
 @lru_cache(maxsize=10)
