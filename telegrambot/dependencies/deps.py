@@ -8,6 +8,7 @@ from dependency_injector import containers, providers
 from api_client import AsyncClientSession, models_as_jsonschema
 from dependencies.repositories import Repositories
 from dependencies.services import Services
+from services import TelegramUiPreferences
 
 
 class Deps(containers.DeclarativeContainer):
@@ -40,6 +41,12 @@ class Deps(containers.DeclarativeContainer):
         url=config.redis_storage_url,
         state_ttl=config.storage_state_ttl,
         data_ttl=config.storage_data_ttl,
+    )
+
+    telegram_ui_preferences = providers.Singleton(
+        TelegramUiPreferences,
+        storage=storage,
+        ttl=config.storage_data_ttl,
     )
 
     # Планировщик периодических задач

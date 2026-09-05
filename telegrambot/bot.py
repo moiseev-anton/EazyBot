@@ -36,6 +36,7 @@ async def on_startup(deps: Deps, bot: Bot):
     commands = [
         BotCommand(command="start", description="🚀 Перезапуск бота"),
         BotCommand(command="main", description="🏠 На главную"),
+        BotCommand(command="legacy", description="📝 Старый UI"),
                 ]
     await bot.set_my_commands(commands, scope=BotCommandScopeDefault())
     logger.info("Bot started.")
@@ -64,9 +65,10 @@ def main():
 
     bot = container.bot()
     storage = container.storage()
+    telegram_ui_preferences = container.telegram_ui_preferences()
     dp = Dispatcher(bot=bot, storage=storage, deps=container)
-    dp.message.middleware(UserContextMiddleware())
-    dp.callback_query.middleware(UserContextMiddleware())
+    dp.message.middleware(UserContextMiddleware(telegram_ui_preferences))
+    dp.callback_query.middleware(UserContextMiddleware(telegram_ui_preferences))
     dp.callback_query.middleware(CallbackLockMiddleware(storage))
 
     dp.include_routers(

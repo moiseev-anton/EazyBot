@@ -6,6 +6,7 @@ from uuid import uuid4
 from context import request_context
 
 from dependencies import Deps
+from services import TelegramUiPreferences
 
 
 class DependencyMiddleware(BaseMiddleware):
@@ -20,6 +21,10 @@ class DependencyMiddleware(BaseMiddleware):
 
 
 class UserContextMiddleware(BaseMiddleware):
+    def __init__(self, telegram_ui_preferences: TelegramUiPreferences):
+        super().__init__()
+        self.telegram_ui_preferences = telegram_ui_preferences
+
     async def __call__(
         self,
         handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
@@ -34,6 +39,7 @@ class UserContextMiddleware(BaseMiddleware):
                 "user_id": str(user.id),
                 "hmac": False,
             })
+            await self.telegram_ui_preferences.touch_schedule_style(user.id)
 
         return await handler(event, data)
 

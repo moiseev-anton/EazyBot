@@ -2,14 +2,15 @@ import logging
 
 from aiogram import F, Router, types
 from aiogram.fsm.context import FSMContext
+from aiogram.types import InputRichMessage
 from dependency_injector.wiring import inject, Provide
 
 from callbacks import FacultyCallback, GradeCallback
 from dependencies import Deps
-from enums import Branch, NavigationAction
+from enums import Branch, NavigationAction, ScheduleStyle
 from keyboards import get_faculties_keyboard, get_grades_keyboard, get_groups_keyboard
-from messages import FACULTY_CHOOSING, get_grade_choosing_msg, get_group_choosing_msg
-from services import GroupService
+from messages import add_rich_keyboard, FACULTY_CHOOSING, get_grade_choosing_msg, get_group_choosing_msg, get_rich_choosing_message
+from services import GroupService, TelegramUiPreferences
 from states import get_state_data, GroupStates
 
 logger = logging.getLogger(__name__)
@@ -23,6 +24,7 @@ async def faculties_handler(
         callback: types.CallbackQuery,
         state: FSMContext,
         group_service: GroupService = Provide[Deps.services.group],
+        telegram_ui_preferences: TelegramUiPreferences = Provide[Deps.telegram_ui_preferences],
 ):
     """
     Первый уровень навигации групп.
@@ -32,9 +34,20 @@ async def faculties_handler(
 
     faculties = group_service.get_faculties()
 
+    schedule_style = await telegram_ui_preferences.get_schedule_style(callback.from_user.id)
+    keyboard = get_faculties_keyboard(faculties)
+    if schedule_style == ScheduleStyle.RICH:
+        content = add_rich_keyboard(
+            get_rich_choosing_message("Группы", "Выберите факультет."), keyboard
+        )
+        reply_markup = None
+    else:
+        content = FACULTY_CHOOSING
+        reply_markup = keyboard
     await callback.message.edit_text(
-        text=FACULTY_CHOOSING,
-        reply_markup=get_faculties_keyboard(faculties),
+        text=content if isinstance(content, str) else None,
+        rich_message=content if isinstance(content, InputRichMessage) else None,
+        reply_markup=reply_markup,
     )
     await state.set_state(GroupStates.choosing_faculty)
     await callback.answer()
@@ -47,6 +60,7 @@ async def faculty_grades_handler(
         callback_data: FacultyCallback,
         state: FSMContext,
         group_service: GroupService = Provide[Deps.services.group],
+        telegram_ui_preferences: TelegramUiPreferences = Provide[Deps.telegram_ui_preferences],
 ):
     """
     Второй уровень навигации групп.
@@ -58,9 +72,20 @@ async def faculty_grades_handler(
     faculty = group_service.get_faculty(faculty_id)
     grades = group_service.get_grades_for_faculty(faculty_id)
 
+    schedule_style = await telegram_ui_preferences.get_schedule_style(callback.from_user.id)
+    keyboard = get_grades_keyboard(grades)
+    if schedule_style == ScheduleStyle.RICH:
+        content = add_rich_keyboard(
+            get_rich_choosing_message(faculty.title, "Выберите курс."), keyboard
+        )
+        reply_markup = None
+    else:
+        content = get_grade_choosing_msg(faculty)
+        reply_markup = keyboard
     await callback.message.edit_text(
-        text=get_grade_choosing_msg(faculty),
-        reply_markup=get_grades_keyboard(grades),
+        text=content if isinstance(content, str) else None,
+        rich_message=content if isinstance(content, InputRichMessage) else None,
+        reply_markup=reply_markup,
     )
     await state.set_state(GroupStates.choosing_grade)
     await callback.answer()
@@ -73,6 +98,7 @@ async def course_groups_handler(
         callback_data: GradeCallback,
         state: FSMContext,
         group_service: GroupService = Provide[Deps.services.group],
+        telegram_ui_preferences: TelegramUiPreferences = Provide[Deps.telegram_ui_preferences],
 ):
     """
     Третий уровень навигации групп.
@@ -87,9 +113,25 @@ async def course_groups_handler(
     faculty = group_service.get_faculty(faculty_id)
     groups = group_service.get_groups_for_faculty_grade(faculty_id, chosen_grade)
 
+    schedule_style = await telegram_ui_preferences.get_schedule_style(callback.from_user.id)
+    keyboard = get_groups_keyboard(groups)
+    if schedule_style == ScheduleStyle.RICH:
+        content = add_rich_keyboard(
+            get_rich_choosing_message(
+                faculty.title,
+                "Выберите группу.",
+                context=f"{chosen_grade} курс",
+            ),
+            keyboard,
+        )
+        reply_markup = None
+    else:
+        content = get_group_choosing_msg(faculty, chosen_grade)
+        reply_markup = keyboard
     await callback.message.edit_text(
-        text=get_group_choosing_msg(faculty, chosen_grade),
-        reply_markup=get_groups_keyboard(groups),
+        text=content if isinstance(content, str) else None,
+        rich_message=content if isinstance(content, InputRichMessage) else None,
+        reply_markup=reply_markup,
     )
     await state.set_state(GroupStates.choosing_group)
     await callback.answer()

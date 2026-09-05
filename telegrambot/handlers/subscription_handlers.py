@@ -2,17 +2,18 @@ import logging
 
 from aiogram import F, Router, types
 from aiogram.fsm.context import FSMContext
+from aiogram.types import InputRichMessage
 from dependency_injector.wiring import inject, Provide
 
 from dependencies import Deps
-from enums import Branch, SubscriptionAction
-from messages import ALREADY_HAS_SUBSCRIPTION_WARNING
+from enums import Branch, ScheduleStyle, SubscriptionAction
+from messages import add_rich_keyboard, ALREADY_HAS_SUBSCRIPTION_WARNING, get_rich_subscription_replacement_warning
 from states import get_state_data
 from handlers.entity_handler import entity_handler
 from handlers.main_handler import main_callback_handler
-from keyboards import CONFIRM_KB
+from keyboards import BACK_HOME_KB, CONFIRM_KB
 from callbacks import EntityCallback, SubscriptionCallback
-from services import GroupService, SubscriptionService, TeacherService
+from services import GroupService, SubscriptionService, TeacherService, TelegramUiPreferences
 from states import ActionStates
 
 logger = logging.getLogger(__name__)
@@ -24,13 +25,19 @@ router = Router()
 async def subscribe_handler(
         callback: types.CallbackQuery,
         state: FSMContext,
-        subscription_service: SubscriptionService = Provide[Deps.services.subscription]
+        subscription_service: SubscriptionService = Provide[Deps.services.subscription],
+        telegram_ui_preferences: TelegramUiPreferences = Provide[Deps.telegram_ui_preferences],
 ):
     if await subscription_service.has_any_subscriptions():
-
+        schedule_style = await telegram_ui_preferences.get_schedule_style(callback.from_user.id)
+        content = (
+            add_rich_keyboard(get_rich_subscription_replacement_warning(), BACK_HOME_KB)
+            if schedule_style == ScheduleStyle.RICH else ALREADY_HAS_SUBSCRIPTION_WARNING
+        )
         await callback.message.edit_text(
-            text=ALREADY_HAS_SUBSCRIPTION_WARNING,
-            reply_markup=CONFIRM_KB,
+            text=content if isinstance(content, str) else None,
+            rich_message=content if isinstance(content, InputRichMessage) else None,
+            reply_markup=None if isinstance(content, InputRichMessage) else CONFIRM_KB,
         )
         await state.set_state(ActionStates.waiting_sub_confirm)
 
