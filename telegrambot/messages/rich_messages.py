@@ -26,7 +26,10 @@ _ENTITY_LABELS = {
     Branch.TEACHERS: "Преподаватель",
 }
 
-def get_rich_main_message(user: UserDTO) -> InputRichMessage:
+def get_rich_main_message(
+        user: UserDTO,
+        add_bottom_spacer: bool = False,
+) -> InputRichMessage:
     """Форматирует главный экран для нового интерфейса Telegram."""
     blocks = [
         InputRichBlockSectionHeading(text=f"👤 {user.name}", size=2),
@@ -57,6 +60,8 @@ def get_rich_main_message(user: UserDTO) -> InputRichMessage:
                 ]
             )
         )
+    if add_bottom_spacer:
+        blocks.append(InputRichBlockParagraph(text="\u200c"))
     return InputRichMessage(blocks=blocks)
 
 

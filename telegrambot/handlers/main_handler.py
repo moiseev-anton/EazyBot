@@ -30,7 +30,10 @@ async def build_main_menu_content(
     reply_markup = get_main_keyboard(sub_id, endpoint, schedule_style)
     if schedule_style == ScheduleStyle.RICH:
         text = add_rich_footer(
-            add_rich_keyboard(get_rich_main_message(user), reply_markup),
+            add_rich_keyboard(
+                get_rich_main_message(user, add_bottom_spacer=True),
+                reply_markup,
+            ),
             "Вернуть старый UI можно в настройках.",
         )
         reply_markup = None
