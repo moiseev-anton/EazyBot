@@ -12,6 +12,7 @@ from keyboards import get_faculties_keyboard, get_grades_keyboard, get_groups_ke
 from messages import add_rich_keyboard, FACULTY_CHOOSING, get_grade_choosing_msg, get_group_choosing_msg, get_rich_choosing_message
 from services import GroupService, TelegramUiPreferences
 from states import get_state_data, GroupStates
+from telegram_helpers import edit_message_with_retry
 
 logger = logging.getLogger(__name__)
 
@@ -44,13 +45,12 @@ async def faculties_handler(
     else:
         content = FACULTY_CHOOSING
         reply_markup = keyboard
-    await callback.message.edit_text(
+    await edit_message_with_retry(callback.message,
         text=content if isinstance(content, str) else None,
         rich_message=content if isinstance(content, InputRichMessage) else None,
         reply_markup=reply_markup,
     )
     await state.set_state(GroupStates.choosing_faculty)
-    await callback.answer()
 
 
 @router.callback_query(FacultyCallback.filter())
@@ -82,13 +82,12 @@ async def faculty_grades_handler(
     else:
         content = get_grade_choosing_msg(faculty)
         reply_markup = keyboard
-    await callback.message.edit_text(
+    await edit_message_with_retry(callback.message,
         text=content if isinstance(content, str) else None,
         rich_message=content if isinstance(content, InputRichMessage) else None,
         reply_markup=reply_markup,
     )
     await state.set_state(GroupStates.choosing_grade)
-    await callback.answer()
 
 
 @router.callback_query(GradeCallback.filter())
@@ -128,10 +127,9 @@ async def course_groups_handler(
     else:
         content = get_group_choosing_msg(faculty, chosen_grade)
         reply_markup = keyboard
-    await callback.message.edit_text(
+    await edit_message_with_retry(callback.message,
         text=content if isinstance(content, str) else None,
         rich_message=content if isinstance(content, InputRichMessage) else None,
         reply_markup=reply_markup,
     )
     await state.set_state(GroupStates.choosing_group)
-    await callback.answer()

@@ -10,6 +10,7 @@ from enums import NavigationAction, ScheduleStyle
 from keyboards import get_main_keyboard
 from messages import add_rich_footer, add_rich_keyboard, get_main_message, get_rich_main_message
 from services import TelegramUiPreferences, UserService
+from telegram_helpers import edit_message_with_retry
 
 router = Router()
 
@@ -48,14 +49,13 @@ async def main_callback_handler(
         state: FSMContext,
 ):
     text, reply_markup = await build_main_menu_content(callback.from_user.id)
-    await callback.message.edit_text(
+    await edit_message_with_retry(callback.message,
         text=text if isinstance(text, str) else None,
         rich_message=text if isinstance(text, InputRichMessage) else None,
         reply_markup=reply_markup,
     )
 
     await state.clear()
-    await callback.answer()
 
 
 @router.message(Command(NavigationAction.MAIN))
@@ -101,10 +101,9 @@ async def schedule_ui_handler(
         ScheduleStyle(callback_data.style),
     )
     text, reply_markup = await build_main_menu_content(callback.from_user.id)
-    await callback.message.edit_text(
+    await edit_message_with_retry(callback.message,
         text=text if isinstance(text, str) else None,
         rich_message=text if isinstance(text, InputRichMessage) else None,
         reply_markup=reply_markup,
     )
     await state.clear()
-    await callback.answer()

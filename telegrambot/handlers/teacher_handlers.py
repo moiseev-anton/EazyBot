@@ -12,6 +12,7 @@ from keyboards import get_alphabet_keyboard, get_teachers_keyboard
 from callbacks import AlphabetCallback
 from services import TeacherService, TelegramUiPreferences
 from states import TeacherStates
+from telegram_helpers import edit_message_with_retry
 
 logger = logging.getLogger(__name__)
 router = Router()
@@ -43,13 +44,12 @@ async def alphabet_handler(
     else:
         content = LETTER_CHOOSING
         reply_markup = keyboard
-    await callback.message.edit_text(
+    await edit_message_with_retry(callback.message,
         text=content if isinstance(content, str) else None,
         rich_message=content if isinstance(content, InputRichMessage) else None,
         reply_markup=reply_markup,
     )
     await state.set_state(TeacherStates.choosing_letter)
-    await callback.answer()
 
 
 @router.callback_query(AlphabetCallback.filter())
@@ -81,10 +81,9 @@ async def teachers_bucket_handler(
     else:
         content = TEACHERS_CHOOSING
         reply_markup = keyboard
-    await callback.message.edit_text(
+    await edit_message_with_retry(callback.message,
         text=content if isinstance(content, str) else None,
         rich_message=content if isinstance(content, InputRichMessage) else None,
         reply_markup=reply_markup,
     )
     await state.set_state(TeacherStates.choosing_teacher)
-    await callback.answer()

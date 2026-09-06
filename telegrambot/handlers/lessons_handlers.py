@@ -1,7 +1,6 @@
 import logging
 
 from aiogram import F, Router, types
-from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
 from dependency_injector.wiring import inject, Provide
 
@@ -15,6 +14,7 @@ from messages import add_rich_keyboard, add_rich_note, get_rich_schedule_msg, ge
 from schedule_view_modes import ScheduleMode
 from services import GroupService, LessonService, SubscriptionService, TeacherService
 from states import ActionStates, get_state_data
+from telegram_helpers import edit_message_with_retry
 
 logger = logging.getLogger(__name__)
 
@@ -107,23 +107,18 @@ async def _edit_schedule_message(
 ) -> bool:
     reply_markup = get_schedule_keyboard(callback_data, prev_page, next_page)
 
-    try:
-        if isinstance(callback_data, RichLessonsCallback):
-            await callback.message.edit_text(
-                rich_message=add_rich_note(
-                    add_rich_keyboard(
-                        get_rich_schedule_msg(target_obj, lessons, date_span), reply_markup
-                    ),
-                    "Для актуальных данных обновите расписание.",
+    if isinstance(callback_data, RichLessonsCallback):
+        return await edit_message_with_retry(
+            callback.message,
+            rich_message=add_rich_note(
+                add_rich_keyboard(
+                    get_rich_schedule_msg(target_obj, lessons, date_span), reply_markup
                 ),
-            )
-        else:
-            await callback.message.edit_text(
-                text=get_schedule_msg(target_obj, lessons, date_span),
-                reply_markup=reply_markup,
-            )
-        return True
-    except TelegramBadRequest as error:
-        if "message is not modified" not in str(error).lower():
-            raise
-        return False
+                "Для актуальных данных обновите расписание.",
+            ),
+        )
+    return await edit_message_with_retry(
+        callback.message,
+        text=get_schedule_msg(target_obj, lessons, date_span),
+        reply_markup=reply_markup,
+    )

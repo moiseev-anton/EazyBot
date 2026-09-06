@@ -9,6 +9,7 @@ from messages import add_rich_keyboard, get_main_message, get_rich_settings_mess
 from keyboards import get_settings_keyboard
 from callbacks import ToggleCallback
 from services import TelegramUiPreferences, UserService
+from telegram_helpers import edit_message_with_retry
 
 router = Router()
 
@@ -28,12 +29,11 @@ async def settings_callback_handler(
         reply_markup = None
     else:
         text = get_main_message(user)
-    await callback.message.edit_text(
+    await edit_message_with_retry(callback.message,
         text=text if isinstance(text, str) else None,
         rich_message=text if isinstance(text, InputRichMessage) else None,
         reply_markup=reply_markup,
     )
-    await callback.answer()
 
 @router.callback_query(ToggleCallback.filter(F.flag_name == ToggleEnum.UPCOMING))
 @inject

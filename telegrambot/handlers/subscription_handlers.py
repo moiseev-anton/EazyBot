@@ -15,6 +15,7 @@ from keyboards import BACK_HOME_KB, CONFIRM_KB
 from callbacks import EntityCallback, SubscriptionCallback
 from services import GroupService, SubscriptionService, TeacherService, TelegramUiPreferences
 from states import ActionStates
+from telegram_helpers import edit_message_with_retry
 
 logger = logging.getLogger(__name__)
 router = Router()
@@ -34,7 +35,7 @@ async def subscribe_handler(
             add_rich_keyboard(get_rich_subscription_replacement_warning(), BACK_HOME_KB)
             if schedule_style == ScheduleStyle.RICH else ALREADY_HAS_SUBSCRIPTION_WARNING
         )
-        await callback.message.edit_text(
+        await edit_message_with_retry(callback.message,
             text=content if isinstance(content, str) else None,
             rich_message=content if isinstance(content, InputRichMessage) else None,
             reply_markup=None if isinstance(content, InputRichMessage) else CONFIRM_KB,

@@ -13,6 +13,7 @@ from callbacks import EntityCallback
 from keyboards import get_actions_keyboard
 from services import GroupService, SubscriptionService, TeacherService, TelegramUiPreferences
 from states import ActionStates
+from telegram_helpers import edit_message_with_retry
 
 logger = logging.getLogger(__name__)
 router = Router()
@@ -56,10 +57,9 @@ async def entity_handler(
     else:
         content = get_selected_msg(obj, subscription)
         reply_markup = keyboard
-    await callback.message.edit_text(
+    await edit_message_with_retry(callback.message,
         text=content if isinstance(content, str) else None,
         rich_message=content if isinstance(content, InputRichMessage) else None,
         reply_markup=reply_markup,
     )
     await state.set_state(ActionStates.choosing_action)
-    await callback.answer()
