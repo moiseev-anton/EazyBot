@@ -1,4 +1,7 @@
+import logging
+
 from aiogram import BaseMiddleware
+from aiogram.exceptions import TelegramBadRequest, TelegramNetworkError
 from aiogram.fsm.storage.redis import RedisStorage
 from aiogram.types import CallbackQuery, TelegramObject
 from typing import Callable, Dict, Any, Awaitable
@@ -7,6 +10,9 @@ from context import request_context
 
 from dependencies import Deps
 from services import TelegramUiPreferences
+
+
+logger = logging.getLogger(__name__)
 
 
 class DependencyMiddleware(BaseMiddleware):
@@ -48,6 +54,7 @@ class CallbackLockMiddleware(BaseMiddleware):
     """Не допускает одновременную обработку callback-кнопок одного сообщения."""
 
     LOCK_TTL_SECONDS = 30
+    DEFERRED_ANSWER_CALLBACK_PREFIXES = ("les:", "rles:", "sub:")
     RELEASE_LOCK_SCRIPT = """
         if redis.call('get', KEYS[1]) == ARGV[1] then
             return redis.call('del', KEYS[1])
@@ -59,6 +66,26 @@ class CallbackLockMiddleware(BaseMiddleware):
         super().__init__()
         self.redis = storage.redis
         self.release_lock = self.redis.register_script(self.RELEASE_LOCK_SCRIPT)
+
+    async def _acknowledge(self, event: CallbackQuery, text: str | None = None) -> bool:
+        try:
+            await event.answer(text)
+            return True
+        except TelegramBadRequest as error:
+            if "query is too old" not in str(error).lower():
+                raise
+            logger.info("Callback query %s has already expired", event.id)
+            return False
+        except TelegramNetworkError:
+            logger.warning("Could not acknowledge callback query %s", event.id)
+            return True
+
+    @classmethod
+    def _requires_late_answer(cls, event: CallbackQuery) -> bool:
+        return (
+            event.data == "confirm"
+            or bool(event.data and event.data.startswith(cls.DEFERRED_ANSWER_CALLBACK_PREFIXES))
+        )
 
     async def __call__(
         self,
@@ -81,7 +108,11 @@ class CallbackLockMiddleware(BaseMiddleware):
         )
 
         if not acquired:
-            await event.answer("⏳ Запрос уже обрабатывается")
+            await self._acknowledge(event, "⏳ Запрос уже обрабатывается")
+            return None
+
+        if not self._requires_late_answer(event) and not await self._acknowledge(event):
+            await self.release_lock(keys=[lock_key], args=[lock_token])
             return None
 
         try:
