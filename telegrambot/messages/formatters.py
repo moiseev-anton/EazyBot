@@ -32,6 +32,12 @@ def format_time(value: Optional[time]) -> str:
     return value.strftime("%H:%M") if value else "--:--"
 
 
+def _format_subject(lesson: LessonDTO) -> str:
+    if lesson.annotation is None:
+        return lesson.subject
+    return f"{lesson.subject} ({lesson.annotation})"
+
+
 # === Форматировщик урока ===
 def format_lesson(lesson: LessonDTO, mode: LessonDisplayMode = LessonDisplayMode.FULL) -> str:
     number_emoji = replace_digits_to_emojis(lesson.number)
@@ -41,7 +47,7 @@ def format_lesson(lesson: LessonDTO, mode: LessonDisplayMode = LessonDisplayMode
 
     lines = [
         f"{number_emoji}<b>{part} {start} - {end}</b> 📍{lesson.classroom or '-'}",
-        f"<b>{lesson.subject}</b>",
+        f"<b>{_format_subject(lesson)}</b>",
     ]
 
     if LessonDisplayMode.SHOW_SUBGROUP in mode and lesson.subgroup and lesson.subgroup != "0":
@@ -152,7 +158,7 @@ def _format_rich_lesson(
         number_emoji,
         RichTextBold(text=f"{part} {start} - {end}"),
         f" 📍{lesson.classroom or '-'}\n",
-        RichTextBold(text=lesson.subject),
+        RichTextBold(text=_format_subject(lesson)),
     ]
 
     if lesson.subgroup and lesson.subgroup != "0":

@@ -14,6 +14,7 @@ class LessonDTO(BaseModel):
     startTime: Optional[time]
     endTime: Optional[time]
     subject: str
+    annotation: Optional[str] = None
     classroom: str
     subgroup: str = 0
     _group_id: int
@@ -50,6 +51,7 @@ class LessonDTO(BaseModel):
             startTime=l.startTime,
             endTime=l.endTime,
             subject=l.subject,
+            annotation=l.annotation,
             classroom=l.classroom,
             subgroup=l.subgroup,
             _group_id=int(l.group._resource_identifier.id),
