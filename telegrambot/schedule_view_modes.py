@@ -1,5 +1,7 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
+from zoneinfo import ZoneInfo
 
+from config import settings
 from dto import DateSpanDTO
 from enums import ModeEnum
 
@@ -33,7 +35,8 @@ class ScheduleMode:
         pass
 
     def get_span(self, shift: int = 0) -> DateSpanDTO:
-        start = self.start_func(date.today()) + timedelta(days=shift * self.days)
+        today = datetime.now(ZoneInfo(settings.schedule_timezone)).date()
+        start = self.start_func(today) + timedelta(days=shift * self.days)
         end = start + timedelta(days=self.days - 1)
         return DateSpanDTO(start=start, end=end)
 

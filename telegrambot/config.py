@@ -24,6 +24,7 @@ class Settings(BaseSettings):
 
     base_link: str = Field(alias="base_scraping_url")
     show_entity_links: bool = True
+    schedule_timezone: str = "Europe/Moscow"
 
     groups_cache_file_path: str = str(BASE_DIR / "cache" / "groups.json")
     teachers_cache_file_path: str = str(BASE_DIR / "cache" / "teachers.json")
