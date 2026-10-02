@@ -51,7 +51,7 @@ class LessonDTO(BaseModel):
             startTime=l.startTime,
             endTime=l.endTime,
             subject=l.subject,
-            annotation=l.annotation,
+            annotation=getattr(l, "annotation", None),
             classroom=l.classroom,
             subgroup=l.subgroup,
             _group_id=int(l.group._resource_identifier.id),
