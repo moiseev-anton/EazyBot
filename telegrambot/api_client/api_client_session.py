@@ -130,6 +130,7 @@ class AsyncClientSession(Session):
         # для устойчивости при возможном расширении request_kwargs
         kwargs = copy.deepcopy(self._request_kwargs)
         headers = kwargs.setdefault("headers", {})
+        headers.setdefault("Accept", "application/vnd.api+json")
 
         if social_id:
             headers["X-Social-ID"] = social_id

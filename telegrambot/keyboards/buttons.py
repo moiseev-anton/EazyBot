@@ -5,8 +5,10 @@ from aiogram.utils.keyboard import InlineKeyboardButton
 from config import settings
 from enums import NavigationAction, ModeEnum, ScheduleStyle, SubscriptionAction
 from callbacks import FacultyCallback, GradeCallback, AlphabetCallback, EntityCallback, LessonsCallback, \
-    RichLessonsCallback, ScheduleUiCallback, SubscriptionCallback, ToggleCallback  # Изменено: callbacks в keyboards
+    RichLessonsCallback, ScheduleUiCallback, SubscriptionCallback
 from common import replace_digits_to_emojis
+from callbacks import NotificationCallback
+from dto.notification_preference_dto import NotificationPreferenceDTO
 
 logger = logging.getLogger(__name__)
 
@@ -34,11 +36,15 @@ def unsubscribe(sub_id: int | str) -> InlineKeyboardButton:
         callback_data=SubscriptionCallback(action=SubscriptionAction.UNSUBSCRIBE, sub_id=sub_id).pack()
     )
 
-def get_notify_toggle(title: str, flag_name: str, enabled: bool) -> InlineKeyboardButton:
-    rb = "🔔" if enabled else "🔕"
+def get_notify_toggle(title: str, preference: NotificationPreferenceDTO) -> InlineKeyboardButton:
+    rb = "🔔" if preference.enabled else "🔕"
     return InlineKeyboardButton(
         text=f"{rb} {title}",
-        callback_data=ToggleCallback(flag_name=flag_name).pack()
+        callback_data=NotificationCallback(
+            notification_type=preference.notification_type,
+            enabled=not preference.enabled,
+            version=preference.version,
+        ).pack()
     )
 
 

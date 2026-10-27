@@ -3,6 +3,8 @@ models_as_jsonschema = {
         'socialId': {'type': 'string'},
         'chatId': {'type': 'string'},
         'platform': {'type': 'string'},
+        # None allows auth requests to omit this backend-managed field.
+        'isBlocked': {'type': ['boolean', 'null']},
         'firstName': {'type': ['string', 'null']},
         'lastName': {'type': ['string', 'null']},
         'extraData': {
@@ -23,10 +25,8 @@ models_as_jsonschema = {
         'firstName': {'type': 'string'},
         'lastName': {'type': ['string', 'null']},
         'username': {'type': 'string'},
-        'notifyScheduleUpdates': {'type': 'boolean'},
-        'notifyUpcomingLessons': {'type': 'boolean'},
         'subscriptions': {'relation': 'to-many', 'resource': ['group-subscriptions', 'teacher-subscriptions']},
-        'accounts': {'relation': 'to-many', 'resource': ['accounts']},
+        'accounts': {'relation': 'to-many', 'resource': ['social-accounts']},
     }},
 
     "group-subscriptions": {

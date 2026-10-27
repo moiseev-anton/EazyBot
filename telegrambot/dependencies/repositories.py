@@ -1,4 +1,5 @@
 from dependency_injector import containers, providers
+from repositories.notification_preference_repository import JsonApiNotificationPreferenceRepository
 
 from api_client import AsyncClientSession
 from repositories import (JsonApiAccountRepository, JsonApiGroupRepository, JsonApiLessonRepository,
@@ -10,6 +11,7 @@ class Repositories(containers.DeclarativeContainer):
     api_client = providers.Dependency(instance_of=AsyncClientSession)
 
     account = providers.Singleton(JsonApiAccountRepository, api_client=api_client)
+    notification_preference = providers.Singleton(JsonApiNotificationPreferenceRepository, api_client=api_client)
     user = providers.Singleton(JsonApiUserRepository, api_client=api_client)
     group = providers.Singleton(
         JsonApiGroupRepository,

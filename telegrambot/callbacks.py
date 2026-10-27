@@ -54,3 +54,9 @@ class SubscriptionCallback(CallbackData, prefix="sub"):
 
 class ToggleCallback(CallbackData, prefix="toggle"):
     flag_name: str
+
+
+class NotificationCallback(CallbackData, prefix="notify"):
+    notification_type: str
+    enabled: bool
+    version: str

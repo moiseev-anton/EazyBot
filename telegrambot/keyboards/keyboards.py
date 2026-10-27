@@ -13,7 +13,7 @@ from callbacks import (
 from config import settings
 from dto import FacultyDTO, GroupDTO, SubscriptionDTO, TeacherDTO, UserDTO
 from dto.base_dto import SubscriptableDTO
-from enums import EntitySource, ScheduleStyle, SubscriptionAction, ToggleEnum
+from enums import EntitySource, ScheduleStyle, SubscriptionAction
 from . import buttons
 
 ALPHABET_KEYBOARD_ROW_WIDTH = 5
@@ -55,21 +55,20 @@ def get_main_keyboard(
 
 def get_settings_keyboard(
         user: UserDTO,
+        preferences: dict,
         schedule_style: ScheduleStyle = ScheduleStyle.LEGACY,
 ) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.row(
         buttons.get_notify_toggle(
             "Изменения в расписании",
-            ToggleEnum.CHANGES,
-            user.notify_schedule_updates
+            preferences["schedule_updated"]
         )
     )
     builder.row(
         buttons.get_notify_toggle(
             "Напоминания о занятиях",
-            ToggleEnum.UPCOMING,
-            user.notify_upcoming_lessons
+            preferences["lesson_upcoming"]
         )
     )
     if user.subscriptions and schedule_style != ScheduleStyle.RICH:
