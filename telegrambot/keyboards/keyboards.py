@@ -1,4 +1,5 @@
 from typing import Optional
+from aiogram.types import InlineKeyboardButton
 
 from aiogram.utils.keyboard import InlineKeyboardBuilder, InlineKeyboardMarkup
 from cachetools.func import ttl_cache
@@ -13,7 +14,7 @@ from callbacks import (
 from config import settings
 from dto import FacultyDTO, GroupDTO, SubscriptionDTO, TeacherDTO, UserDTO
 from dto.base_dto import SubscriptableDTO
-from enums import EntitySource, ScheduleStyle, SubscriptionAction
+from enums import EntitySource, ModeEnum, ScheduleStyle, SubscriptionAction
 from . import buttons
 
 ALPHABET_KEYBOARD_ROW_WIDTH = 5
@@ -169,15 +170,8 @@ def get_actions_keyboard(
     else:
         subscription_button = buttons.SUBSCRIBE
 
-    if schedule_style == ScheduleStyle.RICH:
-        builder.row(subscription_button)
-    else:
-        builder.add(subscription_button)
-        if settings.show_entity_links and obj.endpoint:
-            builder.add(buttons.get_url_button(obj.endpoint))
-        builder.adjust(2, 2, 1)
-
-    if schedule_style == ScheduleStyle.RICH and settings.show_entity_links and obj.endpoint:
+    builder.row(subscription_button)
+    if settings.show_entity_links and obj.endpoint:
         builder.row(buttons.get_url_button(obj.endpoint))
     builder.row(buttons.BACK, buttons.HOME)
     return builder.as_markup()
@@ -206,8 +200,10 @@ def get_schedule_keyboard(
             callback_data=_schedule_callback(style, source, mode, prev_page).pack(),
         )
     builder.button(
-        text="🔄 Обновить" if shift == 0 else "🔄 Сегодня",
-        callback_data=_schedule_callback(style, source, mode).pack(),
+        text="🔄 Обновить" if style == ScheduleStyle.LEGACY or shift == 0 else "🔄 Сегодня",
+        callback_data=_schedule_callback(
+            style, source, mode, shift if style == ScheduleStyle.LEGACY else 0
+        ).pack(),
     )
     if next_page is not None:
         builder.button(
@@ -215,6 +211,18 @@ def get_schedule_keyboard(
             callback_data=_schedule_callback(style, source, mode, next_page).pack()
         )
     builder.adjust(3)
+
+    if style == ScheduleStyle.LEGACY:
+        builder.row(
+            InlineKeyboardButton(
+                text="Сегодня",
+                callback_data=LessonsCallback(source=source, mode=ModeEnum.ONE_DAY).pack(),
+            ),
+            InlineKeyboardButton(
+                text="Неделя",
+                callback_data=LessonsCallback(source=source, mode=ModeEnum.WEEK).pack(),
+            ),
+        )
 
     if source == EntitySource.SUBSCRIPTION:
         builder.row(buttons.BACK_HOME)

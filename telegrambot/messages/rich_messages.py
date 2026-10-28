@@ -32,8 +32,7 @@ def get_rich_main_message(
 ) -> InputRichMessage:
     """Форматирует главный экран для нового интерфейса Telegram."""
     blocks = [
-        InputRichBlockSectionHeading(text=f"👤 {user.name}", size=2),
-        InputRichBlockParagraph(text=f"> {user.username}"),
+        InputRichBlockParagraph(text=f"👤 {user.name}"),
         InputRichBlockSectionHeading(text="⭐ Ваше расписание", size=3),
     ]
     if user.subscriptions:

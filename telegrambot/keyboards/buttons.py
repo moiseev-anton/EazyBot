@@ -61,22 +61,8 @@ def schedule_menu(source: str, style: ScheduleStyle = ScheduleStyle.LEGACY) -> L
     return [
         [
             InlineKeyboardButton(
-                text="🗓 Сегодня",
+                text="🗓 Расписание",
                 callback_data=LessonsCallback(source=source, mode=ModeEnum.ONE_DAY).pack(),
-            ),
-            InlineKeyboardButton(
-                text="🗓 Завтра",
-                callback_data=LessonsCallback(source=source, mode=ModeEnum.ONE_DAY, shift=1).pack(),
-            ),
-        ],
-        [
-            InlineKeyboardButton(
-                text="🗓 На 3 дня",
-                callback_data=LessonsCallback(source=source, mode=ModeEnum.THREE_DAYS).pack(),
-            ),
-            InlineKeyboardButton(
-                text="🗓 Неделя",
-                callback_data=LessonsCallback(source=source, mode=ModeEnum.WEEK).pack(),
             ),
         ],
     ]
