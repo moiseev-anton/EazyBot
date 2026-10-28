@@ -22,6 +22,7 @@ GROUPS = InlineKeyboardButton(text="🎓Группы", callback_data=NavigationA
 TEACHERS = InlineKeyboardButton(text="👨‍🏫👩‍🏫Преподаватели", callback_data=NavigationAction.ALPHABET)
 SITE = InlineKeyboardButton(text="🌍Сайт", url=settings.base_link)
 USER_SETTINGS = InlineKeyboardButton(text="⚙️Настройки", callback_data=NavigationAction.SETTINGS)
+SUPPORT = InlineKeyboardButton(text="💬 Поддержка", callback_data=NavigationAction.SUPPORT)
 
 SUBSCRIBE = InlineKeyboardButton(
     text="⭐ Подписаться",

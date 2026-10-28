@@ -5,14 +5,41 @@ from aiogram.types import InlineKeyboardMarkup, InputRichMessage
 from dependency_injector.wiring import inject, Provide
 
 from dependencies import Deps
+from config import settings
 from callbacks import ScheduleUiCallback
 from enums import NavigationAction, ScheduleStyle
 from keyboards import get_main_keyboard
+from keyboards.keyboards import get_support_keyboard
+from messages.messages import get_support_message
+from messages.rich_messages import get_rich_support_message
 from messages import add_rich_keyboard, get_main_message, get_rich_main_message
 from services import TelegramUiPreferences, UserService
 from telegram_helpers import edit_message_with_retry
 
 router = Router()
+
+
+@router.callback_query(F.data == NavigationAction.SUPPORT)
+@inject
+async def support_callback_handler(
+        callback: types.CallbackQuery,
+        state: FSMContext,
+        telegram_ui_preferences: TelegramUiPreferences = Provide[Deps.telegram_ui_preferences],
+):
+    if not settings.support_enabled:
+        await main_callback_handler(callback, state)
+        return
+    style = await telegram_ui_preferences.get_schedule_style(callback.from_user.id)
+    keyboard = get_support_keyboard()
+    if style == ScheduleStyle.RICH:
+        await edit_message_with_retry(
+            callback.message,
+            rich_message=get_rich_support_message(keyboard),
+        )
+    else:
+        await edit_message_with_retry(
+            callback.message, text=get_support_message(), reply_markup=keyboard,
+        )
 
 @inject
 async def build_main_menu_content(

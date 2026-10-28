@@ -45,6 +45,8 @@ def get_main_keyboard(
             builder.row(*row)
     builder.row(buttons.GROUPS, buttons.TEACHERS)
     builder.row(buttons.USER_SETTINGS)
+    if settings.support_enabled:
+        builder.row(buttons.SUPPORT)
     if schedule_style == ScheduleStyle.LEGACY:
         builder.row(buttons.get_schedule_ui_toggle(schedule_style))
     if settings.show_entity_links and endpoint:
@@ -52,6 +54,14 @@ def get_main_keyboard(
     else:
         builder.row(buttons.SITE)
     return builder.as_markup()
+
+
+def get_support_keyboard() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Сообщество ВКонтакте", url=settings.vk_community_url)],
+        [InlineKeyboardButton(text="Открыть VK-бота", url=settings.vk_bot_url)],
+        [buttons.BACK_HOME],
+    ])
 
 
 def get_settings_keyboard(

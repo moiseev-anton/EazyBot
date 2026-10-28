@@ -20,6 +20,7 @@ class NavigationAction(StrEnum):
     FACULTIES = "faculties"  # Список факультетов
     ALPHABET = "alphabet"  # Выбор по алфавиту
     SETTINGS = "settings"
+    SUPPORT = "support"
 
 
 class Branch(StrEnum):

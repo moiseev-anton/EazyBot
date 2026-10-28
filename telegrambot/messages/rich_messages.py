@@ -19,6 +19,16 @@ from dto.base_dto import SubscriptableDTO
 from enums import Branch, NavigationAction, SubscriptionAction
 
 from .formatters import format_rich_schedule
+from .messages import SUPPORT_DESCRIPTION, SUPPORT_BOT_DESCRIPTION
+
+
+def get_rich_support_message(keyboard: InlineKeyboardMarkup) -> InputRichMessage:
+    message = InputRichMessage(blocks=[
+        InputRichBlockParagraph(text=SUPPORT_DESCRIPTION),
+    ])
+    add_rich_keyboard(message, InlineKeyboardMarkup(inline_keyboard=keyboard.inline_keyboard[:1]))
+    message.blocks.append(InputRichBlockParagraph(text=SUPPORT_BOT_DESCRIPTION))
+    return add_rich_keyboard(message, InlineKeyboardMarkup(inline_keyboard=keyboard.inline_keyboard[1:]))
 
 
 _ENTITY_LABELS = {

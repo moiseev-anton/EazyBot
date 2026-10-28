@@ -46,6 +46,17 @@ def get_start_message(
     return f"{welcome}\n\n{auth_message}" if auth_message else welcome
 
 
+SUPPORT_DESCRIPTION = (
+    "💬 Возник вопрос или нашли ошибку?\nНапишите в обсуждениях "
+    "нашего сообщества ВКонтакте."
+)
+SUPPORT_BOT_DESCRIPTION = "Расписание также доступно в нашем VK-боте."
+
+
+def get_support_message() -> str:
+    return f"{SUPPORT_DESCRIPTION}\n\n{SUPPORT_BOT_DESCRIPTION}"
+
+
 def get_main_message(user: UserDTO) -> str:
     lines = [
         f"👤 <b>{user.name}</b>",
